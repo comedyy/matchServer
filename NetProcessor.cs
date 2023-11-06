@@ -55,6 +55,8 @@ public class NetProcessor
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
             room.StartBattle(peer);
+
+            Console.WriteLine($"start Room {room.RoomId} peerID:{peer.Id}");
         }
     }
 
@@ -68,6 +70,7 @@ public class NetProcessor
             if(room.MemberCount == 0)
             {
                 _allRooms.Remove(room.RoomId);
+                Console.WriteLine($"remove Room {room.RoomId} peerID:{peer.Id}");
             }
         }
     }
@@ -78,6 +81,8 @@ public class NetProcessor
         {
             room.AddPeer(peer, joinRoomMsg.joinMessage);
             _allUserRooms.Add(peer, room);
+
+            Console.WriteLine($"join Room {room.RoomId} peerID:{peer.Id}" );
         }
     }
 
@@ -86,6 +91,8 @@ public class NetProcessor
         var roomId = ++_roomId;
         var room = new BattleRoom(roomId, msg.startBattle, _serverSocket);
         _allRooms.Add(roomId, room);
+
+        Console.WriteLine($"create Room {room.RoomId} peerID:{peer.Id}" );
 
         JoinRoom(peer, new JoinRoomMsg(){
             roomId = roomId, joinMessage = msg.join
