@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
@@ -10,30 +11,22 @@ public enum ConnectResult
     Connnected,
 }
 
-public interface IServerGameSocket : IGameSocket
+public interface IServerGameSocket : ILifeCircle
 {
     // void BroadCastBattleStart(BattleStartMessage msg);
     int Count{get;}
     Action<NetPeer> OnPeerDisconnect { get; set; }
+    void SendMessage<T>(List<NetPeer> peers, T t) where T : INetSerializable;
+    Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
 }
 
-public interface IClientGameSocket : IGameSocket
+public interface IClientGameSocket : ILifeCircle
 {
     Action<BattleStartMessage> OnStartBattle{get;set;}
     ConnectResult connectResult{get;}
     int RoundTripTime{get;}
-}
-
-
-public interface IGameSocket : IMessageSendReceive, ILifeCircle
-{
-    
-}
-
-public interface IMessageSendReceive
-{
-    void SendMessage<T>(List<NetPeer> peers, T t) where T : INetSerializable;
-    Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
+    void SendMessage<T>( T t) where T : INetSerializable;
+    Action<NetDataReader> OnReceiveMsg{get;set;}
 }
 
 public interface ILifeCircle

@@ -130,7 +130,7 @@ public class HashChecker
                 list.Add($"时间{escaped}【{hashItem.GetString(symbol)}】");
             }
 
-            File.WriteAllText("d://" + logFile, string.Join("\n", list) + "\n");
+            File.WriteAllText(logFile, string.Join("\n", list) + "\n");
         }
     }
 }

@@ -14,18 +14,23 @@ class Program
         Init();
         // NetMgr.Instance.Init();
 
-        float perTime = 0;
         Stopwatch watch = new Stopwatch();
         watch.Start();
-        while (true)
+
+        var msEndOfFrame = watch.ElapsedMilliseconds;
+        var msTick = 0L;
+
+        while (true) // 最低50毫秒一个循环
         {
-            var currentTime = watch.ElapsedMilliseconds / 1000f;
-            var delta = currentTime - perTime;
-            perTime = currentTime;
+            _netProcessor.OnUpdate(msTick / 1000f);
 
-            _netProcessor.OnUpdate(delta);
+            // frame
+            var logicMs = watch.ElapsedMilliseconds - msEndOfFrame;
+            var sleepMs = logicMs > 50 ? 0 : 50 - logicMs;  // 如果逻辑处理超过50ms，不sleep了，确保20帧每秒
+            Thread.Sleep((int)sleepMs);
 
-            Thread.Sleep(10);
+            msTick = watch.ElapsedMilliseconds - msEndOfFrame;
+            msEndOfFrame = watch.ElapsedMilliseconds;
         }
 
         Console.WriteLine(" ---------------server end------------------ ");
