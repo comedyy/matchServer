@@ -80,9 +80,12 @@ public class NetProcessor
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
             room.AddPeer(peer, joinRoomMsg.joinMessage);
-            _allUserRooms.Add(peer, room);
 
-            Console.WriteLine($"join Room {room.RoomId} peerID:{peer.Id}" );
+            if(!_allUserRooms.ContainsKey(peer))
+            {
+                _allUserRooms.Add(peer, room);
+                Console.WriteLine($"join Room {room.RoomId} peerID:{peer.Id}" );
+            }
         }
     }
 

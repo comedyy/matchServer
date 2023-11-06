@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game;
 using LiteNetLib.Utils;
 
 public enum MsgType1 : byte
@@ -522,7 +523,6 @@ public struct JoinMessage : INetSerializable
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)MsgType1.JoinRoom);
         writer.Put(name);
         writer.Put(userId);
         writer.Put(HeroId);
@@ -568,7 +568,6 @@ public struct JoinMessage : INetSerializable
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
-        var msgType = reader.GetByte();
         name = reader.GetString();
         userId = reader.GetUInt();
         HeroId = reader.GetUInt();
@@ -866,13 +865,14 @@ public struct RoomUser : INetSerializable
     }
 }
 
-
 public struct UpdateRoomMemberList : INetSerializable
 {
     public RoomUser[] userList;
+    public int roomId;
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
+        roomId = reader.GetInt();
         var count = reader.GetInt();
         userList = new RoomUser[count];
         for(int i = 0; i < count; i++)
@@ -885,6 +885,7 @@ public struct UpdateRoomMemberList : INetSerializable
     {
         writer.Put((byte)MsgType1.SyncRoomMemberList);
 
+        writer.Put(roomId);
         writer.Put(userList.Length);
         for(int i = 0; i < userList.Length; i++)
         {

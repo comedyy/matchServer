@@ -105,8 +105,15 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
     Dictionary<int, JoinMessage> _joins = new Dictionary<int, JoinMessage>();
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
-        var msgType = (MsgType1)reader.PeekByte();
-        OnReceiveMsg(peer, reader);
+        try
+        {
+            var msgType = (MsgType1)reader.PeekByte();
+            OnReceiveMsg(peer, reader);
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine(e.Message + "\n" + e.StackTrace );
+        }
     }
 
     #endregion

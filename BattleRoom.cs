@@ -42,6 +42,7 @@ public class BattleRoom
         }
 
         _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
+            roomId = RoomId,
             userList = _netPeers.Select(m=>new RoomUser(){name = m.Item2.name, HeroId = m.Item2.HeroId}).ToArray()
         });
     }
