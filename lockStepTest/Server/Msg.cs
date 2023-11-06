@@ -20,6 +20,7 @@ public enum MsgType1 : byte
     StartRequest = 103,
     SyncRoomMemberList = 104,
     GetAllRoomList = 105,
+    Unsync = 106,
 }
 
 [Serializable]
@@ -120,7 +121,7 @@ public struct FrameHashItem
     {
         if (item1.hash != item2.hash) return false;
 
-        if (item1.listEntity != null)
+        if (item1.listEntity != null && item2.listEntity != null)
         {
             if (item1.listEntity.Count != item2.listEntity.Count) return false;
             for (int i = 0; i < item1.listEntity.Count; i++)
@@ -129,7 +130,7 @@ public struct FrameHashItem
             }
         }
 
-        if (item1.listValue != null)
+        if (item1.listValue != null && item2.listValue != null)
         {
             if (item1.listValue.Count != item2.listValue.Count) return false;
             for (int i = 0; i < item1.listValue.Count; i++)
@@ -865,6 +866,7 @@ public struct RoomUser : INetSerializable
     }
 }
 
+
 public struct UpdateRoomMemberList : INetSerializable
 {
     public RoomUser[] userList;
@@ -953,6 +955,33 @@ public struct RoomListMsg : INetSerializable
         for(int i = 0; i < roomList.Length; i++)
         {
             writer.Put(roomList[i]);
+        }
+    }
+}
+
+public struct UnSyncMsg : INetSerializable
+{
+    public string[] unSyncInfos;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+
+        var count = reader.GetInt();
+        unSyncInfos = new string[count];
+        for(int i = 0; i < count; i++)
+        {
+            unSyncInfos[i] = reader.GetString();
+        }
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.Unsync);
+
+        writer.Put(unSyncInfos.Length);
+        for(int i = 0; i < unSyncInfos.Length; i++)
+        {
+            writer.Put(unSyncInfos[i]);
         }
     }
 }

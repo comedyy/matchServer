@@ -66,7 +66,15 @@ public class Server
         if(msgType == (byte)MsgType1.HashMsg)
         {
             FrameHash hash = reader.Get<FrameHash>();
-            _hashChecker.AddHash(hash);
+            string[] unsyncs = _hashChecker.AddHash(hash);
+            if(unsyncs != null)
+            {
+                _socket.SendMessage(_netPeers, new UnSyncMsg()
+                {
+                    unSyncInfos = unsyncs
+                });
+            }
+
             return;
         }
         else if(msgType == (byte)MsgType1.ReadyForNextStage)
@@ -125,14 +133,8 @@ public class Server
             _socket.SendMessage(_netPeers, pause);
             return;
         }
-        else if(msgType == (byte)MsgType1.JoinRoom)
-        {
-            return;
-        }
-
 
         PackageItem packageItem = reader.Get<PackageItem >();
-
 
         if(IsPause && CheckPauseStateOpt(packageItem.messageItem.messageBit))
         {
