@@ -1009,8 +1009,6 @@ namespace LiteNetLib
                         ProcessConnectRequest(remoteEndPoint, netPeer, connRequest);
                     break;
                 case PacketProperty.PeerNotFound:
-                    Console.WriteLine("PacketProperty.PeerNotFound" + peerFound);
-
                     if (peerFound) //local
                     {
                         if (netPeer.ConnectionState != ConnectionState.Connected)

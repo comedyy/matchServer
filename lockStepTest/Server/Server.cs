@@ -179,9 +179,9 @@ public class Server
 
     public void StartBattle(BattleStartMessage startMessage)
     {
-        _hashChecker = new HashChecker(_socket.Count);
-        _stages = new int[_socket.Count];
-        _finishRooms = new int[_socket.Count];
+        _hashChecker = new HashChecker(_netPeers.Count);
+        _stages = new int[_netPeers.Count];
+        _finishRooms = new int[_netPeers.Count];
         start = true;
         
         _socket.SendMessage(_netPeers, startMessage);
