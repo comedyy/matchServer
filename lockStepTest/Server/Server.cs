@@ -147,22 +147,12 @@ public class Server
             _currentFrameMessage = new List<MessageItem>();
         }
 
-        // 已经有这个对象的消息了，覆盖
-        for(int i = 0; i < _currentFrameMessage.Count; i++)
-        {
-            if(_currentFrameMessage[i].id == packageItem.messageItem.id)
-            {
-                _currentFrameMessage[i] = packageItem.messageItem;
-                return;
-            }
-        }
-
         _currentFrameMessage.Add(packageItem.messageItem);
     }
 
     private bool CheckPauseStateOpt(MessageBit messageBit)
     {
-        return (messageBit & (MessageBit.ChooseSkill | MessageBit.RechooseSkill | MessageBit.CullSkill | MessageBit.Reborn)) > 0;
+        return (messageBit & (MessageBit.ChooseSkill | MessageBit.RechooseSkill | MessageBit.CullSkill | MessageBit.Reborn | MessageBit.ExitGame)) > 0;
     }
 
     private void BroadCastMsg(List<MessageItem> list)

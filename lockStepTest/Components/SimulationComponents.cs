@@ -19,6 +19,7 @@ public enum MessageBit : ushort
     Reborn = 1 << 8,
     ExitGame = 1 << 9,
     Rotation = 1 << 10,
+    Ping = 1 << 11,
 }
 
 [Serializable]
@@ -34,7 +35,7 @@ public struct MessageItem
     public MessagePauseGameItem pauseItem;
     public MessageCullSkill cullSkill;
     public MessageRechoose rechooseSkill;
-    public int increasingId;
+    public MessagePing ping;
 }
 
 [Serializable]
@@ -129,6 +130,14 @@ public struct MessageRechoose
         return (int)useDropId;
     }
 }
+
+
+[Serializable]
+public struct MessagePing
+{
+    public int msTime;
+}
+
 
 [Serializable]
 public struct MessageHash

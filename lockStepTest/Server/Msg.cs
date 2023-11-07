@@ -116,7 +116,6 @@ public struct FrameHashItem
             }
         }
     }
-
     public static bool operator ==(FrameHashItem item1, FrameHashItem item2)
     {
         if (item1.hash != item2.hash) return false;
@@ -326,10 +325,6 @@ public struct PackageItem : INetSerializable
         writer.Put((ushort)messageItem.messageBit);
         writer.Put((byte)messageItem.id);
 
-#if false
-        writer.Put(messageItem.increasingId);
-#endif
-
         if ((messageItem.messageBit & MessageBit.Pos) > 0)
         {
             writer.Put(messageItem.posItem.posX);
@@ -380,6 +375,11 @@ public struct PackageItem : INetSerializable
             writer.Put(messageItem.cullSkill.skillId);
             writer.Put(messageItem.cullSkill.active);
         }
+
+        if((messageItem.messageBit & MessageBit.Ping) > 0)
+        {
+            writer.Put(messageItem.ping.msTime);
+        }
     }
 
     public static MessageItem FromReader(NetDataReader reader)
@@ -390,10 +390,6 @@ public struct PackageItem : INetSerializable
             id = reader.GetByte(),
             messageBit = messageBit
         };
-
-#if false
-        messageItem.increasingId = reader.GetInt();
-#endif
 
         if ((messageBit & MessageBit.Pos) > 0)
         {
@@ -469,6 +465,13 @@ public struct PackageItem : INetSerializable
                 active = reader.GetBool(),
             };
         }
+
+        if((messageItem.messageBit & MessageBit.Ping) > 0)
+        {
+            messageItem.ping = new MessagePing(){
+                msTime = reader.GetInt(),
+            };
+        } 
 
         return messageItem;
     }
@@ -692,7 +695,7 @@ public struct ServerPackageItem : INetSerializable
         var count = reader.GetByte();
         if (count > 0)
         {
-            list = new List<MessageItem>();
+            list = ListPool<MessageItem>.Get();
             for (int i = 0; i < count; i++)
             {
                 list.Add(PackageItem.FromReader(reader));
@@ -761,7 +764,7 @@ public struct PlaybackMessageItem : INetSerializable
         if((playbackBit & PlaybackBit.Package) > 0)
         {
             var count = reader.GetByte();
-            list = new List<MessageItem>();
+            list = ListPool<MessageItem>.Get();
             for (int i = 0; i < count; i++)
             {
                 list.Add(PackageItem.FromReader(reader));
