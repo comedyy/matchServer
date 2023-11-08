@@ -1,6 +1,7 @@
 using Game;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,7 +13,12 @@ public class BattleRoom
     public int MemberCount => _netPeers.Count;
     BattleStartMessage _startBattle;
     IServerGameSocket _socket;
+    private int _speed = 1;
+
     public bool IsStart {get; private set;}
+    public NetPeer Master => _netPeers[0].Item1;
+    public List<NetPeer> AllPeers => _netPeers.Select(m=>m.Item1).ToList();
+
     internal string roomName
     {
         get
@@ -41,10 +47,7 @@ public class BattleRoom
             _netPeers[index] = (peer, joinMessage);
         }
 
-        _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
-            roomId = RoomId,
-            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item2.name, HeroId = m.Item2.HeroId}).ToArray()
-        });
+        BroadcastRoomInfo();
     }
 
     public void StartBattle(NetPeer peer)
@@ -66,18 +69,37 @@ public class BattleRoom
 
     public void Update(float deltaTime)
     {
-        _server?.Update(deltaTime);
+        for(int i = 0; i < _speed; i++)
+        {
+            _server?.Update(deltaTime);
+        }
     }
 
     internal void RemovePeer(NetPeer peer)
     {
         _netPeers.RemoveAll(m=> m.Item1 == peer);
-        
-        if(_netPeers.Count > 0)
-        {
-            _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
-                userList = _netPeers.Select(m=>new RoomUser(){name = m.Item2.name, HeroId = m.Item2.HeroId}).ToArray()
-            });
-        }
+
+        BroadcastRoomInfo();
+    }
+
+    void BroadcastRoomInfo()
+    {
+        if(_netPeers.Count == 0) return;
+
+        _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
+            roomId = RoomId,
+            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item2.name, HeroId = m.Item2.HeroId, userId = m.Item2.userId}).ToArray()
+        });
+    }
+
+    internal void SetRoomSpeed(NetPeer peer, int speed)
+    {
+        _speed = speed;
+    }
+
+    internal void ForceClose()
+    {
+        _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList());
+        _netPeers.Clear();
     }
 }

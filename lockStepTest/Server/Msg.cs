@@ -21,6 +21,7 @@ public enum MsgType1 : byte
     SyncRoomMemberList = 104,
     GetAllRoomList = 105,
     Unsync = 106,
+    SetSpeed = 107,
 }
 
 [Serializable]
@@ -856,16 +857,19 @@ public struct RoomUser : INetSerializable
 {
     public string name;
     public uint HeroId;
+    public uint userId;
     public void Deserialize(NetDataReader reader)
     {
         name = reader.GetString();
         HeroId = reader.GetUInt();
+        userId = reader.GetUInt();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put(name);
         writer.Put(HeroId);
+        writer.Put(userId);
     }
 }
 
@@ -891,8 +895,9 @@ public struct UpdateRoomMemberList : INetSerializable
         writer.Put((byte)MsgType1.SyncRoomMemberList);
 
         writer.Put(roomId);
-        writer.Put(userList.Length);
-        for(int i = 0; i < userList.Length; i++)
+        var size = userList == null ? 0 : userList.Length;
+        writer.Put(size);
+        for(int i = 0; i < size; i++)
         {
             writer.Put(userList[i]);
         }
@@ -986,5 +991,22 @@ public struct UnSyncMsg : INetSerializable
         {
             writer.Put(unSyncInfos[i]);
         }
+    }
+}
+
+
+public struct SetServerSpeedMsg : INetSerializable
+{
+    public int speed;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        speed = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.SetSpeed);
+        writer.Put(speed);
     }
 }

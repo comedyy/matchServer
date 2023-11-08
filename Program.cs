@@ -39,6 +39,6 @@ class Program
 
     private static void Init()
     {
-        _netProcessor = new NetProcessor();
+        _netProcessor = new NetProcessor(new GameServerSocket(1000));
     }
 }
