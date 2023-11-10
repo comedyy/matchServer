@@ -19,15 +19,20 @@ class Program
 
         var msEndOfFrame = watch.ElapsedMilliseconds;
         var msTick = 0L;
+        int frame = 0;
 
         while (true) // 最低50毫秒一个循环
         {
+            frame ++;
+            var targetMs = frame * 50;
             _netProcessor.OnUpdate(msTick / 1000f);
 
-            // frame
-            var logicMs = watch.ElapsedMilliseconds - msEndOfFrame;
-            var sleepMs = logicMs > 50 ? 0 : 50 - logicMs;  // 如果逻辑处理超过50ms，不sleep了，确保20帧每秒
-            Thread.Sleep((int)sleepMs);
+            Console.WriteLine("xxx" + (targetMs - watch.ElapsedMilliseconds) + " " + msTick);
+
+            while(watch.ElapsedMilliseconds < targetMs)
+            {
+                Thread.Sleep(1);
+            }
 
             msTick = watch.ElapsedMilliseconds - msEndOfFrame;
             msEndOfFrame = watch.ElapsedMilliseconds;
