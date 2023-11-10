@@ -525,7 +525,7 @@ public struct JoinMessage : INetSerializable
     public Pair2[] AllActiveSkillsToSelect;
     public Pair2[] AllPassiveSkillsToSelect;
     public Pair2[] AllAttribute;
-
+    
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put(name);

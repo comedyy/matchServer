@@ -13,7 +13,6 @@ public class Server
     // event Action<byte[]> FrameCallback;
     IServerGameSocket _socket;
     private List<NetPeer> _netPeers;
-    Dictionary<int , List<MessageItem>> _allMessage = new Dictionary<int, List<MessageItem>>();
     List<MessageItem> _currentFrameMessage = new List<MessageItem>();
 
     HashChecker _hashChecker;
@@ -25,7 +24,6 @@ public class Server
         totalSeconds = 0;
         preFrameSeconds = 0;
         _tick = tick;
-        _allMessage.Clear();
         _socket = socket;
         _netPeers = netPeers;
     }
@@ -45,11 +43,6 @@ public class Server
         }
 
         preFrameSeconds += _tick;
-
-        if(_allMessage.TryGetValue(frame, out var list))
-        {
-            _allMessage.Remove(frame);
-        }
 
         frame++;
         BroadCastMsg(_currentFrameMessage);
