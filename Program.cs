@@ -21,13 +21,16 @@ class Program
         var msTick = 0L;
         int frame = 0;
 
+        ProfilerTick _watch = new ProfilerTick("Program");
+
         while (true) // 最低50毫秒一个循环
         {
             frame ++;
             var targetMs = frame * 50;
             _netProcessor.OnUpdate(msTick / 1000f);
 
-            Console.WriteLine("xxx" + (targetMs - watch.ElapsedMilliseconds) + " " + msTick);
+            var logicTime = (int)(watch.ElapsedMilliseconds - msEndOfFrame);
+            _watch.AddTick(logicTime);
 
             while(watch.ElapsedMilliseconds < targetMs)
             {

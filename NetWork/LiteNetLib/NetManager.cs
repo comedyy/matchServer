@@ -637,6 +637,7 @@ namespace LiteNetLib
         }
 
         //Update function
+        ProfilerTick _watch = new ProfilerTick("NetManager");
         private void UpdateLogic()
         {
             var peersToRemove = new List<NetPeer>();
@@ -676,6 +677,7 @@ namespace LiteNetLib
 
                     ProcessNtpRequests(elapsed);
 
+                    _watch.AddTick((int)stopwatch.ElapsedMilliseconds);
                     int sleepTime = UpdateTime - (int)stopwatch.ElapsedMilliseconds;
                     if (sleepTime > 0)
                         _updateTriggerEvent.WaitOne(sleepTime);
