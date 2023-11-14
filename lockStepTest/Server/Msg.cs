@@ -321,173 +321,17 @@ public struct PackageItem : INetSerializable
 {
     public MessageItem messageItem;
 
-    public static void ToWriter(NetDataWriter writer, MessageItem messageItem)
-    {
-        writer.Put((ushort)messageItem.messageBit);
-        writer.Put((byte)messageItem.id);
-
-        if ((messageItem.messageBit & MessageBit.Pos) > 0)
-        {
-            writer.Put(messageItem.posItem.posX);
-            writer.Put(messageItem.posItem.posY);
-            writer.Put(messageItem.posItem.endMoving);
-        }
-
-        if ((messageItem.messageBit & MessageBit.Rotation) > 0)
-        {
-            writer.Put(messageItem.rotationItem.angle);
-        }
-
-        if ((messageItem.messageBit & MessageBit.UserOpt) > 0)
-        {
-            writer.Put((byte)messageItem.optItem.type);
-            writer.Put(messageItem.optItem.enable);
-        }
-
-        if ((messageItem.messageBit & MessageBit.ChooseSkill) > 0)
-        {
-            writer.Put(messageItem.chooseSkillItem.skillId);
-            writer.Put(messageItem.chooseSkillItem.type);
-            writer.Put(messageItem.chooseSkillItem.isSuperSkill);
-            writer.Put(messageItem.chooseSkillItem.conditionId);
-            writer.Put(messageItem.chooseSkillItem.skillGroupId);
-            writer.Put(messageItem.chooseSkillItem.multiple);
-        }
-
-        if ((messageItem.messageBit & MessageBit.GM) > 0)
-        {
-            writer.Put(messageItem.gmItem.op);
-            writer.Put(messageItem.gmItem.value);
-            writer.Put(messageItem.gmItem.value1);
-        }
-
-        if ((messageItem.messageBit & MessageBit.PauseGame) > 0)
-        {
-            writer.Put(messageItem.pauseItem.pause);
-        }
-
-        if ((messageItem.messageBit & MessageBit.RechooseSkill) > 0)
-        {
-            writer.Put(messageItem.rechooseSkill.useDropId);
-        }
-
-        if ((messageItem.messageBit & MessageBit.CullSkill) > 0)
-        {
-            writer.Put(messageItem.cullSkill.skillId);
-            writer.Put(messageItem.cullSkill.active);
-        }
-
-        if((messageItem.messageBit & MessageBit.Ping) > 0)
-        {
-            writer.Put(messageItem.ping.msTime);
-        }
-    }
-
-    public static MessageItem FromReader(NetDataReader reader)
-    {
-        MessageBit messageBit = (MessageBit)reader.GetUShort();
-        var messageItem = new MessageItem()
-        {
-            id = reader.GetByte(),
-            messageBit = messageBit
-        };
-
-        if ((messageBit & MessageBit.Pos) > 0)
-        {
-            messageItem.posItem = new MessagePosItem()
-            {
-                posX = reader.GetInt(),
-                posY = reader.GetInt(),
-                endMoving = reader.GetBool(),
-            };
-        }
-
-        if ((messageBit & MessageBit.Rotation) > 0)
-        {
-            messageItem.rotationItem = new MessageRotationItem()
-            {
-                angle = reader.GetShort(),
-            };
-        }
-
-        if ((messageBit & MessageBit.UserOpt) > 0)
-        {
-            messageItem.optItem = new MessageOpt()
-            {
-                type = (UserOptType)reader.GetByte(),
-                enable = reader.GetBool()
-            };
-        }
-
-        if ((messageBit & MessageBit.ChooseSkill) > 0)
-        {
-            messageItem.chooseSkillItem = new MessageChooseSkillItem()
-            {
-                skillId = reader.GetInt(),
-                type = reader.GetInt(),
-                isSuperSkill = reader.GetBool(),
-                conditionId = reader.GetInt(),
-                skillGroupId = reader.GetUInt(),
-                multiple = reader.GetInt()
-            };
-        }
-
-        if ((messageItem.messageBit & MessageBit.GM) > 0)
-        {
-            messageItem.gmItem = new MessageGMItem()
-            {
-                op = reader.GetString(),
-                value = reader.GetInt(),
-                value1 = reader.GetInt()
-            };
-        }
-
-        if ((messageItem.messageBit & MessageBit.PauseGame) > 0)
-        {
-            messageItem.pauseItem = new MessagePauseGameItem()
-            {
-                pause = reader.GetBool(),
-            };
-        }
-
-        if ((messageItem.messageBit & MessageBit.RechooseSkill) > 0)
-        {
-            messageItem.rechooseSkill = new MessageRechoose()
-            {
-                useDropId = reader.GetUInt(),
-            };
-        }
-
-        if ((messageItem.messageBit & MessageBit.CullSkill) > 0)
-        {
-            messageItem.cullSkill = new MessageCullSkill()
-            {
-                skillId = reader.GetUInt(),
-                active = reader.GetBool(),
-            };
-        }
-
-        if((messageItem.messageBit & MessageBit.Ping) > 0)
-        {
-            messageItem.ping = new MessagePing(){
-                msTime = reader.GetInt(),
-            };
-        } 
-
-        return messageItem;
-    }
-
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.FrameMsg);
 
-        ToWriter(writer, messageItem);
+        MessageItem.ToWriter(writer, messageItem);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        messageItem = FromReader(reader);
+        messageItem = MessageItem.FromReader(reader);
     }
 }
 
@@ -672,21 +516,25 @@ public struct ServerPackageItem : INetSerializable
     public ushort frame;
     public List<MessageItem> list;
 
+    // server write 
+    public FrameMsgBuffer clientFrameMsgList;
+
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ServerFrameMsg);
         writer.Put(frame);
-        var count = (byte)(list == null ? 0 : list.Count);
+        var count = clientFrameMsgList.Count;
         writer.Put((byte)count);
+        clientFrameMsgList.WriterToWriter(writer);
 
-        if (list != null)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                var messageItem = list[i];
-                PackageItem.ToWriter(writer, messageItem);
-            }
-        }
+        // if (list != null)
+        // {
+        //     for (int i = 0; i < list.Count; i++)
+        //     {
+        //         var messageItem = list[i];
+        //         PackageItem.ToWriter(writer, messageItem);
+        //     }
+        // }
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
@@ -699,7 +547,7 @@ public struct ServerPackageItem : INetSerializable
             list = ListPool<MessageItem>.Get();
             for (int i = 0; i < count; i++)
             {
-                list.Add(PackageItem.FromReader(reader));
+                list.Add(MessageItem.FromReader(reader));
             }
         }
     }
@@ -731,7 +579,7 @@ public struct PlaybackMessageItem : INetSerializable
             writer.Put((byte)list.Count);
             for (int i = 0; i < list.Count; i++)
             {
-                PackageItem.ToWriter(writer, list[i]);
+                MessageItem.ToWriter(writer, list[i]);
             }
         }
         if((playbackBit & PlaybackBit.ChangeState) > 0)
@@ -768,7 +616,7 @@ public struct PlaybackMessageItem : INetSerializable
             list = ListPool<MessageItem>.Get();
             for (int i = 0; i < count; i++)
             {
-                list.Add(PackageItem.FromReader(reader));
+                list.Add(MessageItem.FromReader(reader));
             }
         }
 

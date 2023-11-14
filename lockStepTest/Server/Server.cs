@@ -4,19 +4,32 @@ using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
+enum GameState
+{
+    NotBegin,
+    Running,
+    End,
+}
+
 public class Server
 {
     public int frame;
     public float totalSeconds;
     public float preFrameSeconds;
     float _tick;
-    // event Action<byte[]> FrameCallback;
     IServerGameSocket _socket;
     private List<NetPeer> _netPeers;
     List<MessageItem> _currentFrameMessage = new List<MessageItem>();
 
     HashChecker _hashChecker;
     int pauseFrame = -1;
+    
+    GameState _gameState = GameState.NotBegin;
+    private int _stageIndex;
+    int[] _stages;
+    int[] _finishRooms;
+
+    FrameMsgBuffer _frameMsgBuffer = new FrameMsgBuffer();
 
     public Server(float tick, IServerGameSocket socket, List<NetPeer> netPeers)
     {
@@ -32,7 +45,7 @@ public class Server
 
     public void Update(float deltaTime)
     {
-        if(!start) return;
+        if(_gameState != GameState.Running) return;
         if(pauseFrame <= frame) return; // 用户手动暂停
         if(!IsPause && deltaTime == 0) return; // // TImeScale == 0 并且未暂停，就是游戏在初始化
         
@@ -45,12 +58,12 @@ public class Server
         preFrameSeconds += _tick;
 
         frame++;
-        BroadCastMsg(_currentFrameMessage);
+        BroadCastMsg();
 
-        if (_currentFrameMessage != null) 
-        {
-            _currentFrameMessage = null;
-        }
+        // if (_currentFrameMessage != null) 
+        // {
+        //     _currentFrameMessage = null;
+        // }
     }
 
     public void AddMessage(NetDataReader reader)
@@ -106,6 +119,12 @@ public class Server
                 _socket.SendMessage(_netPeers, new ServerEnterLoading(){
                     frameIndex = frame,
                 });
+
+                if(stageIndx == 999)
+                {
+                    // End battle
+                    _gameState = GameState.End;
+                }
             }
             
             return;
@@ -127,20 +146,22 @@ public class Server
             return;
         }
 
-        PackageItem packageItem = reader.Get<PackageItem >();
+        // PackageItem packageItem = reader.Get<PackageItem >();
 
-        if(IsPause && CheckPauseStateOpt(packageItem.messageItem.messageBit))
-        {
-            pauseFrame ++;
-        }
+        // if(IsPause && CheckPauseStateOpt(packageItem.messageItem.messageBit))
+        // {
+        //     pauseFrame ++;
+        // }
 
+        reader.GetByte(); // reader去掉msgType
+        _frameMsgBuffer.AddFromReader(reader);
 
-        if(_currentFrameMessage ==  null) 
-        {
-            _currentFrameMessage = new List<MessageItem>();
-        }
+        // if(_currentFrameMessage ==  null) 
+        // {
+        //     _currentFrameMessage = new List<MessageItem>();
+        // }
 
-        _currentFrameMessage.Add(packageItem.messageItem);
+        // _currentFrameMessage.Add(packageItem.messageItem);
     }
 
     private bool CheckPauseStateOpt(MessageBit messageBit)
@@ -148,26 +169,21 @@ public class Server
         return (messageBit & (MessageBit.ChooseSkill | MessageBit.RechooseSkill | MessageBit.CullSkill | MessageBit.Reborn | MessageBit.ExitGame)) > 0;
     }
 
-    private void BroadCastMsg(List<MessageItem> list)
+    private void BroadCastMsg()
     {
         // Debug.LogError(list == null ? 0 : list.Count);
         // Debug.LogError($"Server:Send package  {frame} {Time.time}" );
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
-            frame = (ushort)frame, list = list
+            frame = (ushort)frame, clientFrameMsgList = _frameMsgBuffer
         });
     }
-
-    bool start = false;
-    private int _stageIndex;
-    int[] _stages;
-    int[] _finishRooms;
 
     public void StartBattle(BattleStartMessage startMessage)
     {
         _hashChecker = new HashChecker(_netPeers.Count);
         _stages = new int[_netPeers.Count];
         _finishRooms = new int[_netPeers.Count];
-        start = true;
+        _gameState = GameState.Running;
         
         _socket.SendMessage(_netPeers, startMessage);
     }

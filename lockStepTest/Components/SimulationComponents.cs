@@ -1,4 +1,5 @@
 using System;
+using LiteNetLib.Utils;
 
 public enum UserOptType
 {
@@ -25,17 +26,15 @@ public enum MessageBit : ushort
 [Serializable]
 public struct MessageItem
 {
-    public uint id;
-    public MessageBit messageBit;
-    public MessagePosItem posItem;
-    public MessageRotationItem rotationItem;
-    public MessageOpt optItem;
-    public MessageChooseSkillItem chooseSkillItem;
-    public MessageGMItem gmItem;
-    public MessagePauseGameItem pauseItem;
-    public MessageCullSkill cullSkill;
-    public MessageRechoose rechooseSkill;
-    public MessagePing ping;
+    internal static MessageItem FromReader(NetDataReader reader)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal static void ToWriter(NetDataWriter writer, MessageItem messageItem)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 [Serializable]
