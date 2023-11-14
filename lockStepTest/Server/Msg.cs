@@ -826,7 +826,14 @@ public struct UnSyncMsg : INetSerializable
         unSyncInfos = new string[count];
         for(int i = 0; i < count; i++)
         {
-            unSyncInfos[i] = reader.GetString();
+            var subCount = reader.GetInt();
+            List<string> lst = new List<string>();
+            for(int j = 0; j < subCount; j++)
+            {
+                lst.Add(reader.GetString());
+            }
+
+            unSyncInfos[i] = string.Join("", lst);
         }
     }
 
@@ -837,12 +844,35 @@ public struct UnSyncMsg : INetSerializable
         writer.Put(unSyncInfos.Length);
         for(int i = 0; i < unSyncInfos.Length; i++)
         {
-            writer.Put(unSyncInfos[i]);
+            var str = unSyncInfos[i];
+            var strLength = str.Length;
+            var maxSize = NetDataWriter.StringBufferMaxLength - 10;
+
+            if(strLength >= maxSize)
+            {
+                // 拆分。
+                var count = strLength / maxSize;
+                if(maxSize * count != strLength)
+                {
+                    count ++;
+                }
+
+                for(int j = 0; j < count; j++)
+                {
+                    var isLastOne = i == count - 1;
+                    var lastOneSize = strLength - maxSize * (count - 1);
+
+                    writer.Put(str.Substring(j * count, isLastOne ? lastOneSize : maxSize));
+                }
+            }
+            else
+            {
+                writer.Put(1);
+                writer.Put(unSyncInfos[i]);
+            }
         }
     }
 }
-
-
 public struct SetServerSpeedMsg : INetSerializable
 {
     public int speed;
