@@ -5,6 +5,12 @@ using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
+enum RoomEndReason
+{
+    RoomMasterLeave,
+    BattleEnd,
+}
+
 public class NetProcessor 
 {
     Dictionary<NetPeer, BattleRoom> _allUserRooms = new Dictionary<NetPeer, BattleRoom>();
@@ -74,23 +80,12 @@ public class NetProcessor
             var master = room.Master;
             if(master == peer)
             {
-                var allPeers = room.AllPeers;
-                room.ForceClose();
-
-                foreach(var x in allPeers)
-                {
-                    _allUserRooms.Remove(x);
-                }
+                RemoveRoom(room, RoomEndReason.RoomMasterLeave);
             }
             else
             {
                 room.RemovePeer(peer);
                 _allUserRooms.Remove(peer);
-            }
-
-            if(room.MemberCount == 0)
-            {
-                _allRooms.Remove(room.RoomId);
             }
         }
     }
@@ -113,14 +108,42 @@ public class NetProcessor
         JoinRoom(peer, new JoinRoomMsg(){
             roomId = roomId, joinMessage = msg.join
         });
+
+        Console.WriteLine($"CreateRoom:{roomId}");
     }
 
+    List<BattleRoom> _removeRooms = new List<BattleRoom>();
     public void OnUpdate(float deltaTime)
     {
         _serverSocket.Update();
+
+        _removeRooms.Clear();
         foreach(var x in _allRooms.Values)
         {
             x.Update(deltaTime);
+            if(x.IsBattleEnd)
+            {
+                _removeRooms.Add(x);
+            }
         }
+
+        foreach(var room in _removeRooms)
+        {
+            RemoveRoom(room, RoomEndReason.BattleEnd);
+        }
+    }
+
+    void RemoveRoom(BattleRoom room, RoomEndReason roomEndReason)
+    {
+        var allPeers = room.AllPeers;
+        room.ForceClose();
+        _allRooms.Remove(room.RoomId);
+
+        foreach(var x in allPeers)
+        {
+            _allUserRooms.Remove(x);
+        }
+
+        Console.WriteLine($"RemoveRoom:{room.RoomId} {roomEndReason}");
     }
 }

@@ -75,6 +75,8 @@ public class BattleRoom
         }
     }
 
+    public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
+
     internal void RemovePeer(NetPeer peer)
     {
         _netPeers.RemoveAll(m=> m.Item1 == peer);

@@ -197,4 +197,6 @@ public class Server
     {
         _socket.OnDestroy();
     }
+
+    public bool IsBattleEnd => _gameState == GameState.End;
 }
