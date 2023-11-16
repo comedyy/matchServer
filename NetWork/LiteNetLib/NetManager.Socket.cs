@@ -231,11 +231,16 @@ namespace LiteNetLib
             }
         }
 
+        ProfilerTick _watchReceive = new ProfilerTick("NetManager.Socket");
         private void ReceiveFrom(Socket s, ref EndPoint bufferEndPoint)
         {
+            _watchReceive.BeginTick();
+
             var packet = PoolGetPacket(NetConstants.MaxPacketSize);
             packet.Size = s.ReceiveFrom(packet.RawData, 0, NetConstants.MaxPacketSize, SocketFlags.None, ref bufferEndPoint);
             OnMessageReceived(packet, (IPEndPoint)bufferEndPoint);
+
+            _watchReceive.EndTick();
         }
 
         private void ReceiveLogic()

@@ -5,11 +5,24 @@ public class ProfilerTick
     Stopwatch _watch;
     int _logicTime = 0;
     string _profilerName;
+
+    int _beginTime = 0;
+
     public ProfilerTick(string name)
     {
         _profilerName = name;
         _watch = new Stopwatch();
         _watch.Start();
+    }
+
+    public void BeginTick()
+    {
+        _beginTime = (int)_watch.ElapsedMilliseconds;
+    }
+
+    public void EndTick()
+    {
+        AddTick((int)_watch.ElapsedMilliseconds - _beginTime);
     }
 
     public void AddTick(int logicMs, Func<string> value = null)

@@ -212,6 +212,7 @@ public struct FrameHash : INetSerializable
             allHashItems = Pool.Count > 0 ? Pool.Dequeue() : new FrameHashItem[count];
             for (int i = 0; i < count; i++)
             {
+                allHashItems[i] = default;
                 allHashItems[i].Read(reader);
             }
         }
