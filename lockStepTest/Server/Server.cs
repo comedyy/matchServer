@@ -13,7 +13,7 @@ enum GameState
 
 public class Server
 {
-    public int frame;
+    public ushort _frame;
     public float totalSeconds;
     public float preFrameSeconds;
     float _tick;
@@ -33,7 +33,7 @@ public class Server
 
     public Server(float tick, IServerGameSocket socket, List<NetPeer> netPeers)
     {
-        frame = 0;
+        _frame = 0;
         totalSeconds = 0;
         preFrameSeconds = 0;
         _tick = tick;
@@ -46,7 +46,7 @@ public class Server
     public void Update(float deltaTime)
     {
         if(_gameState != GameState.Running) return;
-        if(pauseFrame <= frame) return; // 用户手动暂停
+        if(pauseFrame <= _frame) return; // 用户手动暂停
         if(!IsPause && deltaTime == 0) return; // // TImeScale == 0 并且未暂停，就是游戏在初始化
         
         totalSeconds += deltaTime;
@@ -57,8 +57,13 @@ public class Server
 
         preFrameSeconds += _tick;
 
-        frame++;
+        _frame++;
         BroadCastMsg();
+
+        if(_frame == ushort.MaxValue) // timeout
+        {
+            _gameState = GameState.End;
+        }
 
         // if (_currentFrameMessage != null) 
         // {
@@ -96,7 +101,7 @@ public class Server
                 _stageIndex = stageIndx;
                 _socket.SendMessage(_netPeers, new ServerReadyForNextStage(){
                     stageIndex = _stageIndex,
-                    frameIndex = frame
+                    frameIndex = _frame
                 });
 
                 pauseFrame = int.MaxValue;
@@ -114,10 +119,10 @@ public class Server
 
             if(stageIndx > _stageIndex)
             {
-                pauseFrame = frame;
+                pauseFrame = _frame;
  
                 _socket.SendMessage(_netPeers, new ServerEnterLoading(){
-                    frameIndex = frame,
+                    frameIndex = _frame,
                 });
 
                 if(stageIndx == 999)
@@ -135,7 +140,7 @@ public class Server
 
             if(pause.pause)
             {
-                pauseFrame = frame + 1;
+                pauseFrame = _frame + 1;
             }
             else
             {
@@ -174,7 +179,7 @@ public class Server
         // Debug.LogError(list == null ? 0 : list.Count);
         // Debug.LogError($"Server:Send package  {frame} {Time.time}" );
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
-            frame = (ushort)frame, clientFrameMsgList = _frameMsgBuffer
+            frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
         });
     }
 
