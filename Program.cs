@@ -30,7 +30,7 @@ class Program
             _netProcessor.OnUpdate(msTick / 1000f);
 
             var logicTime = (int)(watch.ElapsedMilliseconds - msEndOfFrame);
-            _watch.AddTick(logicTime);
+            _watch.AddTick(logicTime, _netProcessor.GetStatus);
 
             while(watch.ElapsedMilliseconds < targetMs)
             {
