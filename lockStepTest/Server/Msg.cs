@@ -360,6 +360,7 @@ public struct JoinMessage : INetSerializable
 {
     public string name;
     public uint userId;
+    public uint InstanceHeroId; // 这个是用来战斗恢复用的。
     public uint HeroId;
     public uint heroLevel;
     public uint HeroStar;
@@ -375,6 +376,7 @@ public struct JoinMessage : INetSerializable
     {
         writer.Put(name);
         writer.Put(userId);
+        writer.Put(InstanceHeroId);
         writer.Put(HeroId);
         writer.Put(heroLevel);
 
@@ -420,6 +422,7 @@ public struct JoinMessage : INetSerializable
     {
         name = reader.GetString();
         userId = reader.GetUInt();
+        InstanceHeroId = reader.GetUInt();
         HeroId = reader.GetUInt();
         heroLevel = reader.GetUInt();
 
@@ -437,7 +440,6 @@ public struct BattleStartMessage : INetSerializable
     public uint levelId;
     public JoinMessage[] joins;
     public int battleType;
-    public int roomID;
     public uint seed;
     //public uint roomSeed;       // 随机关卡房间使用的seed。
     public float cameraAspect;
@@ -461,9 +463,7 @@ public struct BattleStartMessage : INetSerializable
             writer.Put(joins[i]);
         }
         writer.Put(battleType);
-        writer.Put(roomID);
         writer.Put(seed);
-        //writer.Put(roomSeed);
         writer.Put(cameraAspect);
         writer.Put(isInsideGame);
         writer.Put(guid);
@@ -492,7 +492,6 @@ public struct BattleStartMessage : INetSerializable
         }
 
         battleType = reader.GetInt();
-        roomID = reader.GetInt();
         seed = reader.GetUInt();
         //roomSeed = reader.GetUInt();
         cameraAspect = reader.GetFloat();
