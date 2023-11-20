@@ -355,6 +355,27 @@ public struct Pair2 : INetSerializable
     }
 }
 
+public struct Pair3 : INetSerializable
+{
+    public uint Item1;
+    public uint Item2;
+    public uint Item3;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        Item1 = reader.GetUInt();
+        Item2 = reader.GetUInt();
+        Item3 = reader.GetUInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put(Item1);
+        writer.Put(Item2);
+        writer.Put(Item3);
+    }
+}
+
 
 public struct JoinMessage : INetSerializable
 {
@@ -366,7 +387,7 @@ public struct JoinMessage : INetSerializable
     public uint HeroStar;
     public Pair2[] Talents;
     public Pair2[] ActiveSkills;
-    public Pair2[] PassiveSkills;
+    public Pair3[] PassiveSkills;
 
     public Pair2[] AllActiveSkillsToSelect;
     public Pair2[] AllPassiveSkillsToSelect;
@@ -403,6 +424,21 @@ public struct JoinMessage : INetSerializable
         }
     }
 
+    static void SeriaizePairArray(NetDataWriter writer, Pair3[] array)
+    {
+        if(array == null) 
+        {
+            writer.Put(0);
+            return;
+        }
+
+        writer.Put(array.Length);
+        for (int i = 0; i < array.Length; i++)
+        {
+            array[i].Serialize(writer);
+        }
+    }
+
     static void DeserializePairArray(NetDataReader reader, ref Pair2[] array)
     {
         var count = reader.GetInt();
@@ -410,6 +446,20 @@ public struct JoinMessage : INetSerializable
         for (int i = 0; i < count; i++)
         {
             array[i] = new Pair2()
+            {
+                Item1 = reader.GetUInt(),
+                Item2 = reader.GetUInt()
+            };
+        }
+    }
+
+    static void DeserializePairArray(NetDataReader reader, ref Pair3[] array)
+    {
+        var count = reader.GetInt();
+        array = new Pair3[count];
+        for (int i = 0; i < count; i++)
+        {
+            array[i] = new Pair3()
             {
                 Item1 = reader.GetUInt(),
                 Item2 = reader.GetUInt()
