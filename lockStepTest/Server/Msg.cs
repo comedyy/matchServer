@@ -403,7 +403,7 @@ public struct JoinMessage : INetSerializable
 
         SeriaizePairArray(writer, Talents);
         SeriaizePairArray(writer, ActiveSkills);
-        SeriaizePairArray(writer, PassiveSkills);
+        SeriaizePairArrayP3(writer, PassiveSkills);
         SeriaizePairArray(writer, AllActiveSkillsToSelect);
         SeriaizePairArray(writer, AllPassiveSkillsToSelect);
         SeriaizePairArray(writer, AllAttribute);
@@ -424,7 +424,7 @@ public struct JoinMessage : INetSerializable
         }
     }
 
-    static void SeriaizePairArray(NetDataWriter writer, Pair3[] array)
+    static void SeriaizePairArrayP3(NetDataWriter writer, Pair3[] array)
     {
         if(array == null) 
         {
@@ -453,7 +453,7 @@ public struct JoinMessage : INetSerializable
         }
     }
 
-    static void DeserializePairArray(NetDataReader reader, ref Pair3[] array)
+    static void DeserializePairArrayP3(NetDataReader reader, ref Pair3[] array)
     {
         var count = reader.GetInt();
         array = new Pair3[count];
@@ -462,7 +462,8 @@ public struct JoinMessage : INetSerializable
             array[i] = new Pair3()
             {
                 Item1 = reader.GetUInt(),
-                Item2 = reader.GetUInt()
+                Item2 = reader.GetUInt(),
+                Item3 = reader.GetUInt(),
             };
         }
     }
@@ -478,7 +479,7 @@ public struct JoinMessage : INetSerializable
 
         DeserializePairArray(reader, ref Talents);
         DeserializePairArray(reader, ref ActiveSkills);
-        DeserializePairArray(reader, ref PassiveSkills);
+        DeserializePairArrayP3(reader, ref PassiveSkills);
         DeserializePairArray(reader, ref AllActiveSkillsToSelect);
         DeserializePairArray(reader, ref AllPassiveSkillsToSelect);
         DeserializePairArray(reader, ref AllAttribute);
