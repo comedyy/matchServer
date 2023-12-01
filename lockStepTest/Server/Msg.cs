@@ -501,6 +501,7 @@ public struct BattleStartMessage : INetSerializable
     public int[] ChallengeSlotIds; // 挑战关卡的slots。
 
     public uint[] WheelEnhanceIds;
+    public bool isEnterRoom;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
@@ -529,6 +530,7 @@ public struct BattleStartMessage : INetSerializable
         }
 
         writer.PutArray(WheelEnhanceIds);
+        writer.Put(isEnterRoom);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
@@ -559,6 +561,7 @@ public struct BattleStartMessage : INetSerializable
         }
 
         WheelEnhanceIds = reader.GetUIntArray();
+        isEnterRoom = reader.GetBool();
     }
 }
 
@@ -609,7 +612,8 @@ public enum PlaybackBit : byte
     Package = 1 << 0,
     Hash = 1 << 1,
     ChangeState = 1 << 2,
-    GameEnd = 1 << 3
+    GameEnd = 1 << 3,
+    ForceSavePoint = 1 << 4,
 }
 
 public struct PlaybackMessageItem : INetSerializable
