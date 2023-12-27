@@ -94,7 +94,7 @@ public class NetProcessor
     {
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
-            room.AddPeer(peer, joinRoomMsg.joinMessage);
+            room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.userId, joinRoomMsg.heroId);
             _allUserRooms.Add(peer, room);
         }
     }
@@ -102,11 +102,11 @@ public class NetProcessor
     void CreateRoom(NetPeer peer, CreateRoomMsg msg)
     {
         var roomId = ++_roomId;
-        var room = new BattleRoom(roomId, msg.startBattle, _serverSocket);
+        var room = new BattleRoom(roomId, msg.startBattleMsg, _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
-            roomId = roomId, joinMessage = msg.join
+            roomId = roomId, joinMessage = msg.join, heroId = msg.heroId, name = msg.name, userId = msg.userId
         });
 
         Console.WriteLine($"CreateRoom:{roomId}");

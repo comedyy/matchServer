@@ -20,16 +20,6 @@ public interface IServerGameSocket : ILifeCircle
     Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
 }
 
-public interface IClientGameSocket : ILifeCircle
-{
-    Action<BattleStartMessage> OnStartBattle{get;set;}
-    ConnectResult connectResult{get;}
-    int RoundTripTime{get;}
-    void SendMessage<T>( T t) where T : INetSerializable;
-    void SendMessageNotReliable<T>( T t) where T : INetSerializable;
-    Action<NetDataReader> OnReceiveMsg{get;set;}
-}
-
 public interface ILifeCircle
 {
     void Start();

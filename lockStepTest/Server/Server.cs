@@ -9,7 +9,9 @@ enum GameState
     NotBegin,
     Running,
     End,
+    PostEnd,
 }
+
 
 public class Server
 {
@@ -17,10 +19,11 @@ public class Server
     public float totalSeconds;
     public float preFrameSeconds;
     float _tick;
+    ServerSyncType _syncType;
+    int _maxFrame;
+
     IServerGameSocket _socket;
     private List<NetPeer> _netPeers;
-    List<MessageItem> _currentFrameMessage = new List<MessageItem>();
-
     HashChecker _hashChecker;
     int pauseFrame = -1;
     
@@ -31,14 +34,16 @@ public class Server
 
     FrameMsgBuffer _frameMsgBuffer = new FrameMsgBuffer();
 
-    public Server(float tick, IServerGameSocket socket, List<NetPeer> netPeers)
+    public Server(ServerSetting serverSetting, IServerGameSocket socket, List<NetPeer> netPeers)
     {
         _frame = 0;
         totalSeconds = 0;
         preFrameSeconds = 0;
-        _tick = tick;
+        _tick = serverSetting.tick;
         _socket = socket;
         _netPeers = netPeers;
+        _syncType = serverSetting.syncType;
+        _maxFrame = serverSetting.maxFrame == 0 ? ushort.MaxValue : serverSetting.maxFrame;
     }
 
     bool IsPause => pauseFrame != int.MaxValue;
@@ -60,15 +65,17 @@ public class Server
         _frame++;
         BroadCastMsg();
 
-        if(_frame == ushort.MaxValue) // timeout
+        if(_frame == _maxFrame) // timeout
         {
             _gameState = GameState.End;
         }
 
-        // if (_currentFrameMessage != null) 
-        // {
-        //     _currentFrameMessage = null;
-        // }
+        if(_gameState == GameState.End)
+        {
+            _gameState = GameState.PostEnd;
+            // sendMsg
+            _socket.SendMessage(_netPeers, new ServerCloseMsg());
+        }
     }
 
     public void AddMessage(NetDataReader reader)
@@ -151,22 +158,8 @@ public class Server
             return;
         }
 
-        // PackageItem packageItem = reader.Get<PackageItem >();
-
-        // if(IsPause && CheckPauseStateOpt(packageItem.messageItem.messageBit))
-        // {
-        //     pauseFrame ++;
-        // }
-
         reader.GetByte(); // reader去掉msgType
         _frameMsgBuffer.AddFromReader(reader);
-
-        // if(_currentFrameMessage ==  null) 
-        // {
-        //     _currentFrameMessage = new List<MessageItem>();
-        // }
-
-        // _currentFrameMessage.Add(packageItem.messageItem);
     }
 
     private bool CheckPauseStateOpt(MessageBit messageBit)
@@ -176,14 +169,17 @@ public class Server
 
     private void BroadCastMsg()
     {
-        // Debug.LogError(list == null ? 0 : list.Count);
-        // Debug.LogError($"Server:Send package  {frame} {Time.time}" );
+        if(_syncType == ServerSyncType.SyncMsgOnlyHasMsg && _frameMsgBuffer.Count == 0)
+        {
+            return;
+        }
+
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
             frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
         });
     }
 
-    public void StartBattle(BattleStartMessage startMessage)
+    public void StartBattle(RoomStartBattleMsg startMessage)
     {
         _hashChecker = new HashChecker(_netPeers.Count);
         _stages = new int[_netPeers.Count];

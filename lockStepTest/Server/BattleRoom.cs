@@ -8,43 +8,46 @@ using System.Linq;
 public class BattleRoom
 {
     Server _server;
-    List<(NetPeer, JoinMessage)> _netPeers = new List<(NetPeer, JoinMessage)>();
+    List<(NetPeer, byte[], string, uint, uint)> _netPeers = new List<(NetPeer, byte[], string, uint, uint)>();
     public int RoomId{get; private set;}
     public int MemberCount => _netPeers.Count;
-    BattleStartMessage _startBattle;
+    byte[] _startBattle;
     IServerGameSocket _socket;
     private int _speed = 1;
 
     public bool IsStart {get; private set;}
     public NetPeer Master => _netPeers[0].Item1;
     public List<NetPeer> AllPeers => _netPeers.Select(m=>m.Item1).ToList();
+    ServerSetting _setting; 
 
     internal string roomName
     {
         get
         {
-            var battleType = _startBattle.battleType == (int)LevelType.Challenge ? "挑战" : "主线";
-            return $"{battleType}_{_startBattle.levelId}";
+            // var battleType = _startBattle.battleType == (int)LevelType.Challenge ? "挑战" : "主线";
+            // return $"{battleType}_{_startBattle.levelId}";
+            return "roomName111";
         }
     }
 
-    public BattleRoom(int id, BattleStartMessage startBattle, IServerGameSocket socket)
+    public BattleRoom(int id, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
     {
         RoomId = id;
         _startBattle = startBattle;
         _socket = socket;
+        _setting = setting;
     }
 
-    public void AddPeer(NetPeer peer, JoinMessage joinMessage)
+    public void AddPeer(NetPeer peer, byte[] joinMessage, string name, uint userId, uint heroId)
     {
         var index = _netPeers.FindIndex(m=>m.Item1 == peer);
         if(index < 0) 
         {
-            _netPeers.Add((peer, joinMessage));
+            _netPeers.Add((peer, joinMessage, name, userId, heroId));
         }
         else
         {
-            _netPeers[index] = (peer, joinMessage);
+            _netPeers[index] = (peer, joinMessage, name, userId, heroId);
         }
 
         BroadcastRoomInfo();
@@ -57,9 +60,14 @@ public class BattleRoom
 
         IsStart = true;
 
-        _server = new Server(0.05f, _socket, _netPeers.Select(m=>m.Item1).ToList());
-        _startBattle.joins = _netPeers.Select(m=>m.Item2).ToArray();
-        _server.StartBattle(_startBattle);
+        _server = new Server(_setting, _socket, _netPeers.Select(m=>m.Item1).ToList());
+
+        var startMessage = new RoomStartBattleMsg
+        {
+            joinMessages = _netPeers.Select(m => m.Item2).ToList(),
+            StartMsg = _startBattle
+        };
+        _server.StartBattle(startMessage);
     }
 
     public void OnReceiveMsg(NetDataReader reader)
@@ -90,7 +98,7 @@ public class BattleRoom
 
         _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
             roomId = RoomId,
-            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item2.name, HeroId = m.Item2.HeroId, userId = m.Item2.userId}).ToArray()
+            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item3, HeroId = m.Item4, userId = m.Item5}).ToArray()
         });
     }
 

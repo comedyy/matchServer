@@ -102,7 +102,6 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
         OnPeerDisconnect?.Invoke(peer);
     }
 
-    Dictionary<int, JoinMessage> _joins = new Dictionary<int, JoinMessage>();
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
         try
@@ -117,33 +116,6 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
     }
 
     #endregion
-
-    // public void WriteNet(NetLogLevel level, string str, params object[] args)
-    // {
-    //     Console.WriteLineFormat(str, args);
-    // }
-
-    // public void BroadCastBattleStart(BattleStartMessage msg)
-    // {
-    //     var joins = new JoinMessage[_ourPeers.Count];
-    //     for(int i = 0; i < _ourPeers.Count; i++)
-    //     {
-    //         joins[i] = _joins[_ourPeers[i].Id];
-    //     }
-
-    //     msg.joins = joins;
-
-    //     for(int i = 0; i < _ourPeers.Count; i++)
-    //     {
-    //         var peer = _ourPeers[i];
-    //         _dataWriter.Reset();
-    //         _dataWriter.Put(msg);
-
-    //         peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
-    //     }
-    // }
-
-
 
     public int Count => _ourPeers.Count;
 
