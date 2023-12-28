@@ -8,18 +8,27 @@ public enum ServerSyncType
     SyncMsgOnlyHasMsg,
 }
 
+public enum RoomMasterLeaveOpt
+{
+    RemoveRoomAndBattle,
+    OnlyRemoveRoomBeforeBattle,
+    ChangeRoomMater,
+}
+
 
 public struct ServerSetting : INetSerializable
 {
     public ServerSyncType syncType;
     public float tick;
     public ushort maxFrame;
+    public RoomMasterLeaveOpt masterLeaveOpt;
 
     public void Deserialize(NetDataReader reader)
     {
         syncType = (ServerSyncType)reader.GetByte();
         tick = reader.GetFloat();
         maxFrame = reader.GetUShort();
+        masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -27,6 +36,7 @@ public struct ServerSetting : INetSerializable
         writer.Put((byte)syncType);
         writer.Put(tick);
         writer.Put(maxFrame);
+        writer.Put((byte)masterLeaveOpt);
     }
 }
 
@@ -38,6 +48,7 @@ public struct CreateRoomMsg : INetSerializable
     public string name;
     public uint userId;
     public uint heroId;
+    public string roomName;
     public ServerSetting setting;
 
     public void Deserialize(NetDataReader reader)
@@ -50,6 +61,7 @@ public struct CreateRoomMsg : INetSerializable
         name = reader.GetString();
         userId = reader.GetUInt();
         heroId = reader.GetUInt();
+        roomName = reader.GetString();
         setting = reader.Get<ServerSetting>();
     }
 
@@ -62,6 +74,7 @@ public struct CreateRoomMsg : INetSerializable
         writer.Put(name);
         writer.Put(userId);
         writer.Put(heroId);
+        writer.Put(roomName);
         writer.Put(setting);
     }
 }

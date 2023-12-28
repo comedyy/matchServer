@@ -78,7 +78,7 @@ public class NetProcessor
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
             var master = room.Master;
-            if(master == peer)
+            if(master == peer && room.CheckMasterLeaveShouldDestroyRoom())
             {
                 RemoveRoom(room, RoomEndReason.RoomMasterLeave);
             }
@@ -102,7 +102,7 @@ public class NetProcessor
     void CreateRoom(NetPeer peer, CreateRoomMsg msg)
     {
         var roomId = ++_roomId;
-        var room = new BattleRoom(roomId, msg.startBattleMsg, _serverSocket, msg.setting);
+        var room = new BattleRoom(roomId, msg.roomName, msg.startBattleMsg, _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){

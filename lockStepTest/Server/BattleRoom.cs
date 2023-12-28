@@ -20,18 +20,17 @@ public class BattleRoom
     public List<NetPeer> AllPeers => _netPeers.Select(m=>m.Item1).ToList();
     ServerSetting _setting; 
 
-    internal string roomName
+    public bool CheckMasterLeaveShouldDestroyRoom()
     {
-        get
-        {
-            // var battleType = _startBattle.battleType == (int)LevelType.Challenge ? "挑战" : "主线";
-            // return $"{battleType}_{_startBattle.levelId}";
-            return "roomName111";
-        }
+        return _setting.masterLeaveOpt == RoomMasterLeaveOpt.RemoveRoomAndBattle 
+            || (_setting.masterLeaveOpt == RoomMasterLeaveOpt.OnlyRemoveRoomBeforeBattle && _server == null);
     }
 
-    public BattleRoom(int id, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
+    internal string roomName{get; private set;}
+
+    public BattleRoom(int id, string battleName, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
     {
+        roomName = battleName;
         RoomId = id;
         _startBattle = startBattle;
         _socket = socket;
@@ -98,7 +97,7 @@ public class BattleRoom
 
         _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
             roomId = RoomId,
-            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item3, HeroId = m.Item4, userId = m.Item5}).ToArray()
+            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item3, HeroId = m.Item5, userId = m.Item4}).ToArray()
         });
     }
 
