@@ -23,6 +23,7 @@ public enum MsgType1 : byte
     SetSpeed = 107,
     RoomStartBattle = 108,
     ServerClose = 109,
+    ErrorCode = 110,
 }
 
 [Serializable]

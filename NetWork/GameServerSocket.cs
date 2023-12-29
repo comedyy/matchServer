@@ -42,10 +42,8 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
 #region IMessageSendReceive
     public Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
 
-    public void SendMessage<T>(List<NetPeer> list, T t) where T : INetSerializable
+    public void SendMessage<T>(IEnumerable<NetPeer> list, T t) where T : INetSerializable
     {
-        if(list.Count == 0) return;
-
         _dataWriter.Reset();
         t.Serialize(_dataWriter);
 
@@ -53,6 +51,13 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
         {
             peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
         }
+    }
+
+    public void SendMessage<T>(NetPeer peer, T t) where T : INetSerializable
+    {
+        _dataWriter.Reset();
+        t.Serialize(_dataWriter);
+        peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
     }
 #endregion
 

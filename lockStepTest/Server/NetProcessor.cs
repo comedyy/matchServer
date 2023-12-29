@@ -35,7 +35,7 @@ public class NetProcessor
             case MsgType1.StartRequest : StartBattle(peer, reader.Get<StartBattleRequest>()); break;
             case MsgType1.SetSpeed: SetRoomSpeed(peer, reader.Get<SetServerSpeedMsg>()); break;
             case MsgType1.GetAllRoomList:
-                _serverSocket.SendMessage(new List<NetPeer>(){peer}, GetRoomListMsg());
+                _serverSocket.SendMessage(peer, GetRoomListMsg());
                 break;
             default:
                 if(_allUserRooms.TryGetValue(peer, out var room))
@@ -94,8 +94,17 @@ public class NetProcessor
     {
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
-            room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.userId, joinRoomMsg.heroId);
-            _allUserRooms.Add(peer, room);
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.userId, joinRoomMsg.heroId))
+            {
+                _allUserRooms.Add(peer, room);
+            }
+            else
+            {
+                // send error
+                _serverSocket.SendMessage(peer, new RoomErrorCode(){
+                    roomError = RoomError.RoomFull
+                });
+            }
         }
     }
 

@@ -22,6 +22,7 @@ public struct ServerSetting : INetSerializable
     public float tick;
     public ushort maxFrame;
     public RoomMasterLeaveOpt masterLeaveOpt;
+    public byte maxCount;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -29,6 +30,7 @@ public struct ServerSetting : INetSerializable
         tick = reader.GetFloat();
         maxFrame = reader.GetUShort();
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
+        maxCount = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -37,6 +39,7 @@ public struct ServerSetting : INetSerializable
         writer.Put(tick);
         writer.Put(maxFrame);
         writer.Put((byte)masterLeaveOpt);
+        writer.Put(maxCount);
     }
 }
 
@@ -339,5 +342,27 @@ public struct SetServerSpeedMsg : INetSerializable
     {
         writer.Put((byte)MsgType1.SetSpeed);
         writer.Put(speed);
+    }
+}
+
+public enum RoomError : byte
+{
+    RoomFull = 1,
+}
+
+public struct RoomErrorCode : INetSerializable
+{
+    public RoomError roomError;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        roomError = (RoomError)reader.GetByte();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ErrorCode);
+        writer.Put((byte)roomError);
     }
 }

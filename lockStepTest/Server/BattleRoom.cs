@@ -18,7 +18,21 @@ public class BattleRoom
     public bool IsStart {get; private set;}
     public NetPeer Master => _netPeers[0].Item1;
     public List<NetPeer> AllPeers => _netPeers.Select(m=>m.Item1).ToList();
+
+    const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
+    int MaxRoomUsers
+    {
+        get{
+            var maxCount = _setting.maxCount;
+            if(maxCount == 0)
+            {
+                maxCount = MAX_USER_COUNT;
+            }
+
+            return Math.Min((int)maxCount, MAX_USER_COUNT);
+        }
+    }
 
     public bool CheckMasterLeaveShouldDestroyRoom()
     {
@@ -37,19 +51,26 @@ public class BattleRoom
         _setting = setting;
     }
 
-    public void AddPeer(NetPeer peer, byte[] joinMessage, string name, uint userId, uint heroId)
+    public bool AddPeer(NetPeer peer, byte[] joinMessage, string name, uint userId, uint heroId)
     {
         var index = _netPeers.FindIndex(m=>m.Item1 == peer);
         if(index < 0) 
         {
+            if(_netPeers.Count >= MaxRoomUsers) // 房间人数FUll
+            {
+                return false;
+            }
+
             _netPeers.Add((peer, joinMessage, name, userId, heroId));
         }
-        else
+        else    // 替换信息
         {
             _netPeers[index] = (peer, joinMessage, name, userId, heroId);
         }
 
         BroadcastRoomInfo();
+
+        return true;
     }
 
     public void StartBattle(NetPeer peer)
