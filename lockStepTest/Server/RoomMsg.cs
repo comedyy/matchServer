@@ -49,7 +49,6 @@ public struct CreateRoomMsg : INetSerializable
     public byte[] startBattleMsg;
     public byte[] join;
     public string name;
-    public uint userId;
     public uint heroId;
     public string roomName;
     public ServerSetting setting;
@@ -62,7 +61,6 @@ public struct CreateRoomMsg : INetSerializable
         join = reader.GetBytesWithLength();
         
         name = reader.GetString();
-        userId = reader.GetUInt();
         heroId = reader.GetUInt();
         roomName = reader.GetString();
         setting = reader.Get<ServerSetting>();
@@ -75,7 +73,6 @@ public struct CreateRoomMsg : INetSerializable
         writer.PutBytesWithLength(join);
 
         writer.Put(name);
-        writer.Put(userId);
         writer.Put(heroId);
         writer.Put(roomName);
         writer.Put(setting);
@@ -88,7 +85,6 @@ public struct JoinRoomMsg : INetSerializable
     public int roomId;
     public byte[] joinMessage;
     public string name;
-    public uint userId;
     public uint heroId;
 
 
@@ -98,7 +94,6 @@ public struct JoinRoomMsg : INetSerializable
         roomId = reader.GetInt();
         joinMessage = reader.GetBytesWithLength();
         name = reader.GetString();
-        userId = reader.GetUInt();
         heroId = reader.GetUInt();
     }
 
@@ -108,7 +103,6 @@ public struct JoinRoomMsg : INetSerializable
         writer.Put(roomId);
         writer.PutBytesWithLength(joinMessage);
         writer.Put(name);
-        writer.Put(userId);
         writer.Put(heroId);
     }
 }
@@ -130,6 +124,7 @@ public struct RoomStartBattleMsg : INetSerializable
 {
     public byte[] StartMsg;
     public List<byte[]> joinMessages;
+    public bool isReconnect;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -142,6 +137,7 @@ public struct RoomStartBattleMsg : INetSerializable
         {
             joinMessages.Add(reader.GetBytesWithLength());
         }
+        isReconnect = reader.GetBool();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -154,6 +150,7 @@ public struct RoomStartBattleMsg : INetSerializable
         {
             writer.PutBytesWithLength(joinMessages[i]);
         }
+        writer.Put(isReconnect);
     }
 }
 
@@ -161,12 +158,17 @@ public struct RoomUser : INetSerializable
 {
     public string name;
     public uint HeroId;
-    public uint userId;
+    public int userId;
+    public bool isOnLine;
+    public bool isReady;
+    
     public void Deserialize(NetDataReader reader)
     {
         name = reader.GetString();
         HeroId = reader.GetUInt();
-        userId = reader.GetUInt();
+        userId = reader.GetInt();
+        isOnLine = reader.GetBool();
+        isReady = reader.GetBool();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -174,6 +176,8 @@ public struct RoomUser : INetSerializable
         writer.Put(name);
         writer.Put(HeroId);
         writer.Put(userId);
+        writer.Put(isOnLine);
+        writer.Put(isReady);
     }
 }
 
@@ -348,6 +352,9 @@ public struct SetServerSpeedMsg : INetSerializable
 public enum RoomError : byte
 {
     RoomFull = 1,
+    JoinRoomErrorHasRoom = 2,
+    CreateRoomErrorHasRoom = 3,
+    BattleNotExit = 4,
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -366,3 +373,117 @@ public struct RoomErrorCode : INetSerializable
         writer.Put((byte)roomError);
     }
 }
+
+public struct RoomUserIdMsg : INetSerializable
+{
+    public int userId;
+    public bool reconnectBattle;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        userId = reader.GetInt();
+        reconnectBattle = reader.GetBool();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.SetUserId);
+        writer.Put(userId);
+        writer.Put(reconnectBattle);
+    }
+}
+
+public struct KickUserMsg : INetSerializable
+{
+    public int userId;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        userId = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.KickUser);
+        writer.Put(userId);
+    }
+}
+
+public struct UserLeaveRoomMsg : INetSerializable
+{
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.LeaveUser);
+    }
+}
+
+
+public struct RoomReadyMsg : INetSerializable
+{
+    public bool isReady;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        isReady = reader.GetBool();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.RoomReady);
+        writer.Put(isReady);
+    }
+}
+
+public struct GetUserStateMsg : INetSerializable
+{
+    public enum UserState
+    {
+        None, HasRoom, HasBattle
+    }
+
+    public UserState state;
+    public int userId;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        state = (UserState)reader.GetByte();
+        userId = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.GetUserState);
+        writer.Put((byte)state);
+        writer.Put(userId);
+    }
+}
+
+public struct SyncRoomOptMsg : INetSerializable
+{
+    public enum RoomOpt
+    {
+        None, Kick, Leave
+    }
+
+    public RoomOpt state;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        state = (RoomOpt)reader.GetByte();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.RoomOpt);
+        writer.Put((byte)state);
+    }
+}
+

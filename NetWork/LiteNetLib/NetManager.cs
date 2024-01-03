@@ -199,7 +199,7 @@ namespace LiteNetLib
         /// If NetManager doesn't receive any packet from remote peer during this time (in milliseconds) then connection will be closed
         /// (including library internal keepalive packets)
         /// </summary>
-        public int DisconnectTimeout = 10000;
+        public int DisconnectTimeout = 5000;
 
         /// <summary>
         /// Simulate packet loss by dropping random amount of packets. (Works only in DEBUG mode)

@@ -6,19 +6,24 @@ using LiteNetLib.Utils;
 
 public enum ConnectResult
 {
+    NotConnect,
     Connecting,
     Refuse,
     Connnected,
+    Disconnect,
 }
 
 public interface IServerGameSocket : ILifeCircle
 {
     // void BroadCastBattleStart(BattleStartMessage msg);
     int Count{get;}
-    Action<NetPeer> OnPeerDisconnect { get; set; }
-    void SendMessage<T>(IEnumerable<NetPeer> peers, T t) where T : INetSerializable;
-    void SendMessage<T>(NetPeer peers, T t) where T : INetSerializable;
-    Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
+    Action<int> OnPeerDisconnect { get; set; }
+    Action<int, bool> OnPeerReconnected { get; set; }
+    void SendMessage<T>(IEnumerable<int> peers, T t) where T : INetSerializable;
+    void SendMessage<T>(int peers, T t) where T : INetSerializable;
+    Action<int, NetDataReader> OnReceiveMsg{get;set;}
+    Func<RoomListMsg> GetAllRoomList{get;set;}
+    Func<int, GetUserStateMsg> GetUserState{get;set;}
 }
 
 public interface ILifeCircle

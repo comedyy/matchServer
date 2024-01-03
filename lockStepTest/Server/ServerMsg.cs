@@ -14,16 +14,25 @@ public enum MsgType1 : byte
     PauseGame = 7,
     FinishCurrentStage = 9,         // 完成当前的stage小关
     ServerEnterLoading = 10,  // 完成当前的stage小关, 服务器回包
+    Unsync = 11,
+    ServerReConnect = 12,
+    ServerMsgEnd___ = 100, // 服务器消息最后
+
     CreateRoom = 101,
     JoinRoom = 102,
     StartRequest = 103,
     SyncRoomMemberList = 104,
     GetAllRoomList = 105,
-    Unsync = 106,
     SetSpeed = 107,
     RoomStartBattle = 108,
     ServerClose = 109,
     ErrorCode = 110,
+    SetUserId = 111,
+    KickUser = 112,
+    LeaveUser = 113,
+    RoomReady = 114,
+    GetUserState = 115,
+    RoomOpt = 116,
 }
 
 [Serializable]
@@ -334,7 +343,7 @@ public struct ServerPackageItem : INetSerializable
         writer.Put(frame);
         var count = clientFrameMsgList.Count;
         writer.Put((byte)count);
-        clientFrameMsgList.WriterToWriter(writer);
+        clientFrameMsgList.WriterToWriter(writer, frame);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
@@ -364,5 +373,51 @@ public struct ServerCloseMsg : INetSerializable
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
+    }
+}
+
+public struct ServerReconnectMsg : INetSerializable
+{
+    public int startFrame;
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ServerReConnect);
+        writer.Put(startFrame);
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        startFrame = reader.GetInt();
+    }
+}
+
+
+public struct ServerReconnectMsgResponse : INetSerializable
+{
+    public int startFrame;
+    public List<byte[]> bytes;
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ServerReConnect);
+        writer.Put(startFrame);
+        writer.Put(bytes.Count);
+        for(int i = 0; i < bytes.Count; i++)
+        {
+            writer.PutBytesWithLength(bytes[i]);
+        }
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        startFrame = reader.GetInt();
+
+        var size = reader.GetInt();
+        bytes = new List<byte[]>();
+        for(int i = 0; i < size; i++)
+        {
+            bytes.Add(reader.GetBytesWithLength());
+        }
     }
 }

@@ -9,7 +9,6 @@ enum GameState
     NotBegin,
     Running,
     End,
-    PostEnd,
 }
 
 
@@ -23,7 +22,7 @@ public class Server
     int _maxFrame;
 
     IServerGameSocket _socket;
-    private List<NetPeer> _netPeers;
+    private List<int> _netPeers;
     HashChecker _hashChecker;
     int pauseFrame = -1;
     
@@ -33,8 +32,9 @@ public class Server
     int[] _finishRooms;
 
     FrameMsgBuffer _frameMsgBuffer = new FrameMsgBuffer();
+    public RoomStartBattleMsg _startMessage;
 
-    public Server(ServerSetting serverSetting, IServerGameSocket socket, List<NetPeer> netPeers)
+    public Server(ServerSetting serverSetting, IServerGameSocket socket, List<int> netPeers)
     {
         _frame = 0;
         totalSeconds = 0;
@@ -68,17 +68,11 @@ public class Server
         if(_frame == _maxFrame) // timeout
         {
             _gameState = GameState.End;
-        }
-
-        if(_gameState == GameState.End)
-        {
-            _gameState = GameState.PostEnd;
-            // sendMsg
             _socket.SendMessage(_netPeers, new ServerCloseMsg());
         }
     }
 
-    public void AddMessage(NetDataReader reader)
+    public void AddMessage(int peer, NetDataReader reader)
     {
         var msgType = reader.PeekByte();
         if(msgType == (byte)MsgType1.HashMsg)
@@ -128,35 +122,44 @@ public class Server
             {
                 pauseFrame = _frame;
  
-                _socket.SendMessage(_netPeers, new ServerEnterLoading(){
-                    frameIndex = _frame,
-                });
-
                 if(stageIndx == 999)
                 {
                     // End battle
                     _gameState = GameState.End;
+                    _socket.SendMessage(_netPeers, new ServerCloseMsg());
+                }
+                else
+                {
+                    _socket.SendMessage(_netPeers, new ServerEnterLoading(){
+                        frameIndex = _frame,
+                    });
                 }
             }
             
             return;
         }
-        else if(msgType == (byte)MsgType1.PauseGame)
+        else if(msgType == (byte)MsgType1.ServerReConnect)
         {
-            PauseGameMsg pause = reader.Get<PauseGameMsg>();
-
-            if(pause.pause)
-            {
-                pauseFrame = _frame + 1;
-            }
-            else
-            {
-                pauseFrame = int.MaxValue;
-            }
-
-            _socket.SendMessage(_netPeers, pause);
+            ServerReconnectMsg ready = reader.Get<ServerReconnectMsg>();
+            _socket.SendMessage(peer, _frameMsgBuffer.GetReconnectMsg(ready.startFrame));
             return;
         }
+        // else if(msgType == (byte)MsgType1.PauseGame)
+        // {
+        //     PauseGameMsg pause = reader.Get<PauseGameMsg>();
+
+        //     if(pause.pause)
+        //     {
+        //         pauseFrame = _frame + 1;
+        //     }
+        //     else
+        //     {
+        //         pauseFrame = int.MaxValue;
+        //     }
+
+        //     _socket.SendMessage(_netPeers, pause);
+        //     return;
+        // }
 
         reader.GetByte(); // reader去掉msgType
         _frameMsgBuffer.AddFromReader(reader);
@@ -187,11 +190,11 @@ public class Server
         _gameState = GameState.Running;
         
         _socket.SendMessage(_netPeers, startMessage);
+        _startMessage = startMessage;
     }
 
     public void Destroy()
     {
-        _socket.OnDestroy();
     }
 
     public bool IsBattleEnd => _gameState == GameState.End;

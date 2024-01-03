@@ -8,6 +8,7 @@ public class FrameMsgBuffer
     byte[] _frameBuffer = new byte[TOTAL_LENGTH]; // 接收buffer
     ushort _position;
     byte _msgCount;
+    List<byte[]> _allMessage = new List<byte[]>();
 
     public void AddFromReader(NetDataReader reader)
     {
@@ -27,10 +28,25 @@ public class FrameMsgBuffer
     }
 
     public byte Count => _msgCount;
-    public void WriterToWriter(NetDataWriter writer)
+    public void WriterToWriter(NetDataWriter writer, int frame)
     {
         writer.Put(_frameBuffer, 0, _position);
         _position = 0;
         _msgCount = 0;
+
+        _allMessage.Add(writer.CopyData());
+    }
+
+    internal ServerReconnectMsgResponse GetReconnectMsg(int clientCurrentFrame)
+    {
+        List<byte[]> list = new List<byte[]>();
+        list.AddRange(_allMessage.GetRange(clientCurrentFrame, _allMessage.Count - clientCurrentFrame));
+
+        ServerReconnectMsgResponse response = new ServerReconnectMsgResponse(){
+            startFrame = clientCurrentFrame,
+            bytes = list
+        };
+
+        return response;
     }
 }

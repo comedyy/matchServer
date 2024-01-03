@@ -5,19 +5,40 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class BattleRoom
+
+public struct RoomMemberInfo
+{
+    public int id;
+    public byte[] joinInfo;
+    public string name;
+    public uint heroId;
+    public bool isOnLine;
+    public bool isReady;
+    public float onlineStateChangeTime;
+
+    public RoomMemberInfo(int peer, byte[] joinMessage, string name,  uint heroId) : this()
+    {
+        this.id = peer;
+        this.joinInfo = joinMessage;
+        this.name = name;
+        this.heroId = heroId;
+        this.isOnLine = true;
+    }
+}
+
+public class ServerBattleRoom
 {
     Server _server;
-    List<(NetPeer, byte[], string, uint, uint)> _netPeers = new List<(NetPeer, byte[], string, uint, uint)>();
+    List<RoomMemberInfo> _netPeers = new List<RoomMemberInfo>();
     public int RoomId{get; private set;}
     public int MemberCount => _netPeers.Count;
     byte[] _startBattle;
     IServerGameSocket _socket;
     private int _speed = 1;
 
-    public bool IsStart {get; private set;}
-    public NetPeer Master => _netPeers[0].Item1;
-    public List<NetPeer> AllPeers => _netPeers.Select(m=>m.Item1).ToList();
+    public bool IsBattleStart {get; private set;}
+    public int Master => _netPeers[0].id;
+    public List<int> AllPeers => _netPeers.Select(m=>m.id).ToList();
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
@@ -42,7 +63,7 @@ public class BattleRoom
 
     internal string roomName{get; private set;}
 
-    public BattleRoom(int id, string battleName, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
+    public ServerBattleRoom(int id, string battleName, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
     {
         roomName = battleName;
         RoomId = id;
@@ -51,9 +72,9 @@ public class BattleRoom
         _setting = setting;
     }
 
-    public bool AddPeer(NetPeer peer, byte[] joinMessage, string name, uint userId, uint heroId)
+    public bool AddPeer(int peer, byte[] joinMessage, string name, uint heroId)
     {
-        var index = _netPeers.FindIndex(m=>m.Item1 == peer);
+        var index = _netPeers.FindIndex(m=>m.id == peer);
         if(index < 0) 
         {
             if(_netPeers.Count >= MaxRoomUsers) // 房间人数FUll
@@ -61,11 +82,13 @@ public class BattleRoom
                 return false;
             }
 
-            _netPeers.Add((peer, joinMessage, name, userId, heroId));
+            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, name, heroId));
         }
         else    // 替换信息
         {
-            _netPeers[index] = (peer, joinMessage, name, userId, heroId);
+            var info = _netPeers[index];
+            info.heroId = heroId;
+            _netPeers[index] = info;
         }
 
         BroadcastRoomInfo();
@@ -73,26 +96,32 @@ public class BattleRoom
         return true;
     }
 
-    public void StartBattle(NetPeer peer)
+    public void StartBattle(int peer)
     {
         if(_netPeers.Count == 0) return;
-        if(peer != _netPeers[0].Item1) return;
+        if(peer != _netPeers[0].id) return;
 
-        IsStart = true;
+        for(int i = 1; i < _netPeers.Count; i++)
+        {
+            if(!_netPeers[i].isReady) return;
+        }
 
-        _server = new Server(_setting, _socket, _netPeers.Select(m=>m.Item1).ToList());
+
+        IsBattleStart = true;
+
+        _server = new Server(_setting, _socket, _netPeers.Select(m=>m.id).ToList());
 
         var startMessage = new RoomStartBattleMsg
         {
-            joinMessages = _netPeers.Select(m => m.Item2).ToList(),
+            joinMessages = _netPeers.Select(m => m.joinInfo).ToList(),
             StartMsg = _startBattle
         };
         _server.StartBattle(startMessage);
     }
 
-    public void OnReceiveMsg(NetDataReader reader)
+    public void OnReceiveMsg(int peer, NetDataReader reader)
     {
-        _server.AddMessage(reader);
+        _server.AddMessage(peer, reader);
     }
 
     public void Update(float deltaTime)
@@ -101,35 +130,128 @@ public class BattleRoom
         {
             _server?.Update(deltaTime);
         }
+
+        if(_server != null && _server.IsBattleEnd)
+        {
+            SwitchToRoomMode();
+        }
     }
 
-    public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
-
-    internal void RemovePeer(NetPeer peer)
+    private void SwitchToRoomMode()
     {
-        _netPeers.RemoveAll(m=> m.Item1 == peer);
+        _server?.Destroy();
+        _server = null;
+        IsBattleStart = false;
+        for(int i = 0; i < _netPeers.Count; i++)
+        {
+            SetIsReady(_netPeers[i].id, false);
+        }
+    }
+
+    // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
+
+    internal void RemovePeer(int peer, SyncRoomOptMsg.RoomOpt opt)
+    {
+        _netPeers.RemoveAll(m=> m.id == peer);
 
         BroadcastRoomInfo();
+
+        _socket.SendMessage(peer, new SyncRoomOptMsg(){ state = opt});
     }
 
     void BroadcastRoomInfo()
     {
-        if(_netPeers.Count == 0) return;
+        if(_netPeers.Count == 0 ) return;
 
-        _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList(){
+        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new UpdateRoomMemberList(){
             roomId = RoomId,
-            userList = _netPeers.Select(m=>new RoomUser(){name = m.Item3, HeroId = m.Item5, userId = m.Item4}).ToArray()
+            userList = _netPeers.Select(m=>new RoomUser(){name = m.name, HeroId = m.heroId, userId = m.id, isOnLine = m.isOnLine, isReady = m.isReady}).ToArray()
         });
     }
 
-    internal void SetRoomSpeed(NetPeer peer, int speed)
+    internal void SetRoomSpeed(int peer, int speed)
     {
         _speed = speed;
     }
 
     internal void ForceClose()
     {
-        _socket.SendMessage(_netPeers.Select(m=>m.Item1).ToList(), new UpdateRoomMemberList());
+        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new UpdateRoomMemberList());
         _netPeers.Clear();
+    }
+
+    internal void SetUserOnLineState(int peer, bool v, float _serverTime)
+    {
+        var index = _netPeers.FindIndex(m=>m.id == peer);
+        var x = _netPeers[index];
+                
+        if(x.isOnLine == v) return;
+
+        x.isOnLine = v;
+        x.onlineStateChangeTime = _serverTime;
+        _netPeers[index] = x;
+
+        // sync room list
+        BroadcastRoomInfo();
+    }
+
+    internal void SetIsReady(int peer, bool v)
+    {
+        var index = _netPeers.FindIndex(m=>m.id == peer);
+        var x = _netPeers[index];
+        x.isReady = v;
+        _netPeers[index] = x;
+
+        // sync room list
+        BroadcastRoomInfo();
+    }
+
+    internal bool KickUser(int peer, int userId)
+    {
+        if(peer != Master) return false;
+
+        var index = _netPeers.FindIndex(m=>m.id == userId);
+        if(index <= 0) return false;
+
+        RemovePeer(userId, SyncRoomOptMsg.RoomOpt.Kick);
+
+        return true;
+    }
+
+    public bool NeedDestroy(float serverTime)
+    {
+        // 1. 人走光了
+        if(_netPeers.Count == 0) 
+        {
+            Console.WriteLine("00000");
+            return true;
+        }
+
+        // 掉线光了。
+        var time = _server != null ? 30 : 30;
+        var isAllOffLine = _netPeers.All(m=>!m.isOnLine && serverTime > m.onlineStateChangeTime + time);
+
+        if(isAllOffLine) 
+        {
+            Console.WriteLine("xxxx");
+            return true;
+        }
+
+        return false;
+    }
+
+    internal void SendReconnectBattleMsg(int peer)
+    {
+        if(_server == null)
+        {
+            _socket.SendMessage(peer, new RoomErrorCode(){
+                roomError = RoomError.BattleNotExit
+            });
+            return;
+        }
+
+        var message = _server._startMessage;
+        message.isReconnect = true;
+        _server.StartBattle(message);
     }
 }

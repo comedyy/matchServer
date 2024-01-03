@@ -5,16 +5,18 @@ using System.Net.Sockets;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-public class GameServerSocket : IServerGameSocket, INetEventListener
+public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 {
     private NetManager _netServer;
-    private List<NetPeer> _ourPeers = new List<NetPeer>();
     private NetDataWriter _dataWriter;
-    private int countUser;
+    private int _maxUserConnected;
+    Dictionary<NetPeer, int> _lookupPeerToId = new Dictionary<NetPeer, int>();
+    Dictionary<int, NetPeer> _lookupIdToPeer = new Dictionary<int, NetPeer>();
 
     public GameServerSocket(int countUser)
     {
-        this.countUser = countUser;
+        this._maxUserConnected = countUser;
+        NetDebug.Logger = this;
     }
 
     #region ILifeCircle
@@ -22,8 +24,8 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
     {
         _dataWriter = new NetDataWriter();
         _netServer = new NetManager(this);
+        _netServer.UnconnectedMessagesEnabled = true;
         _netServer.Start(5000);
-        _netServer.BroadcastReceiveEnabled = true;
         _netServer.UpdateTime = 15;
     }
 
@@ -40,24 +42,30 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
 #endregion
     
 #region IMessageSendReceive
-    public Action<NetPeer, NetDataReader> OnReceiveMsg{get;set;}
+    public Action<int, NetDataReader> OnReceiveMsg{get;set;}
 
-    public void SendMessage<T>(IEnumerable<NetPeer> list, T t) where T : INetSerializable
+    public void SendMessage<T>(IEnumerable<int> list, T t) where T : INetSerializable
     {
         _dataWriter.Reset();
-        t.Serialize(_dataWriter);
+        _dataWriter.Put(t);
 
-        foreach (var peer in list)
+        foreach (var id in list)
         {
-            peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
+            if(_lookupIdToPeer.TryGetValue(id, out var peer))
+            {
+                peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
+            }
         }
     }
 
-    public void SendMessage<T>(NetPeer peer, T t) where T : INetSerializable
+    public void SendMessage<T>(int id, T t) where T : INetSerializable
     {
-        _dataWriter.Reset();
-        t.Serialize(_dataWriter);
-        peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
+        if(_lookupIdToPeer.TryGetValue(id, out var peer))
+        {
+            _dataWriter.Reset();
+            _dataWriter.Put(t);
+            peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
+        }
     }
 #endregion
 
@@ -65,7 +73,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
     public void OnPeerConnected(NetPeer peer)
     {
         Console.WriteLine("[SERVER] We have new peer " + peer.EndPoint);
-        _ourPeers.Add(peer);
+        _lookupPeerToId.Add(peer, 0);
     }
 
     public void OnNetworkError(IPEndPoint endPoint, SocketError socketErrorCode)
@@ -76,17 +84,20 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader,
         UnconnectedMessageType messageType)
     {
-        if (messageType == UnconnectedMessageType.Broadcast)
+        var msgType = (MsgType1)reader.PeekByte();
+        if(msgType == MsgType1.GetAllRoomList && GetAllRoomList != null)
         {
-            if(_ourPeers.Count >= countUser)
-            {
-                return;
-            }
-
-             Console.WriteLine("[SERVER] Received discovery request. Send discovery response");
-            NetDataWriter resp = new NetDataWriter();
-            resp.Put(1);
-            _netServer.SendUnconnectedMessage(resp, remoteEndPoint);
+            var msg = GetAllRoomList();
+            _dataWriter.Reset();
+            _dataWriter.Put(msg);
+            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
+        }
+        else if(msgType == MsgType1.GetUserState && GetUserState != null)
+        {
+            var msg = GetUserState(reader.Get<GetUserStateMsg>().userId);
+            _dataWriter.Reset();
+            _dataWriter.Put(msg);
+            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
         }
     }
 
@@ -96,15 +107,23 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
 
     public void OnConnectionRequest(ConnectionRequest request)
     {
-        request.AcceptIfKey("sample_app");
+        if(_lookupPeerToId.Count >= _maxUserConnected)
+        {
+            request.Reject();
+            return;
+        }
+
+        request.AcceptIfKey("wsa_game");
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
          Console.WriteLine("[SERVER] peer disconnected " + peer.EndPoint + ", info: " + disconnectInfo.Reason);
-        _ourPeers.Remove(peer);
-
-        OnPeerDisconnect?.Invoke(peer);
+        if(_lookupPeerToId.TryGetValue(peer, out var id))
+        {
+            _lookupIdToPeer.Remove(id);
+            OnPeerDisconnect?.Invoke(id);
+        }
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
@@ -112,17 +131,61 @@ public class GameServerSocket : IServerGameSocket, INetEventListener
         try
         {
             var msgType = (MsgType1)reader.PeekByte();
-            OnReceiveMsg(peer, reader);
+            if(msgType == MsgType1.SetUserId)
+            {
+                var msg = reader.Get<RoomUserIdMsg>();
+                _lookupIdToPeer[msg.userId] = peer;
+                _lookupPeerToId[peer] = msg.userId;
+
+                OnPeerReconnected(msg.userId, msg.reconnectBattle);
+                return;
+            }
+
+            if(_lookupPeerToId.TryGetValue(peer, out var id) && id > 0)
+            {
+                OnReceiveMsg(id, reader);
+            }
+            else
+            {
+                #if UNITY_2017_1_OR_NEWER
+                UnityEngine.Debug.LogError("收到不存在的id");
+                #else
+                Console.WriteLine("收到不存在的id");
+                #endif
+            }
         }
         catch(Exception e)
         {
+            #if UNITY_2017_1_OR_NEWER
+            UnityEngine.Debug.LogError(e.Message + "\n" + e.StackTrace );
+            #else
             Console.WriteLine(e.Message + "\n" + e.StackTrace );
+            #endif
         }
     }
 
     #endregion
 
-    public int Count => _ourPeers.Count;
+    public int Count => _lookupPeerToId.Count;
 
-    public Action<NetPeer> OnPeerDisconnect{get;set;}
+    public Action<int> OnPeerDisconnect{get;set;}
+    public Action<int, bool> OnPeerReconnected{get;set;}
+    public Func<RoomListMsg> GetAllRoomList{get;set;}
+    public Func<int, GetUserStateMsg> GetUserState{get;set;}
+
+    public void WriteNet(NetLogLevel level, string str, params object[] args)
+    {
+        if(level == NetLogLevel.Error)
+        {
+            #if UNITY_EDITOR
+            UnityEngine.Debug.LogError($"{str} {string.Join(",", args)}");
+            #else
+            Console.WriteLine($"{str} {string.Join(",", args)}");
+            #endif
+        }
+        else
+        {
+            // ignore
+        }
+    }
 }
