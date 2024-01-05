@@ -168,7 +168,7 @@ public class NetProcessor
 
             if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.heroId))
             {
-                _allUserRooms.Add(peer, room);
+                _allUserRooms[peer] = room;
             }
             else
             {

@@ -88,6 +88,7 @@ public class ServerBattleRoom
         {
             var info = _netPeers[index];
             info.heroId = heroId;
+            info.joinInfo = joinMessage;
             _netPeers[index] = info;
         }
 
