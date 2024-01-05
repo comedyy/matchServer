@@ -233,20 +233,20 @@ public struct FrameHash : INetSerializable
 
 public struct FinishRoomMsg : INetSerializable
 {
-    public int nextStageValue;
+    public int stageValue;
     internal int id;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.FinishCurrentStage);
-        writer.Put(nextStageValue);
+        writer.Put(stageValue);
         writer.Put(id);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        nextStageValue = reader.GetInt();
+        stageValue = reader.GetInt();
         id = reader.GetInt();
     }
 }

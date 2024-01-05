@@ -133,7 +133,7 @@ public class Server
         else if(msgType == (byte)MsgType1.FinishCurrentStage)
         {
             FinishRoomMsg ready = reader.Get<FinishRoomMsg>();
-            var finishedStageValue = ready.nextStageValue;
+            var finishedStageValue = ready.stageValue;
             var id = ready.id;
             _playerInfos[id].finishedStageValue = finishedStageValue;
             _playerInfos[id].finishStageTime = _roomTime;
