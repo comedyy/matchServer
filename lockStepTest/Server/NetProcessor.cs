@@ -209,7 +209,7 @@ public class NetProcessor
 
         foreach(var x in _allRooms.Values)
         {
-            x.Update(deltaTime);
+            x.Update(deltaTime, _serverTime);
         }
 
         CheckClearRoom();

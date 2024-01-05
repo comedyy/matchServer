@@ -23,6 +23,8 @@ public struct ServerSetting : INetSerializable
     public ushort maxFrame;
     public RoomMasterLeaveOpt masterLeaveOpt;
     public byte maxCount;
+    internal int waitReadyStageTimeMs;
+    internal int waitFinishStageTimeMs;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -31,6 +33,9 @@ public struct ServerSetting : INetSerializable
         maxFrame = reader.GetUShort();
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
         maxCount = reader.GetByte();
+
+        waitReadyStageTimeMs = reader.GetInt();
+        waitFinishStageTimeMs = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -40,6 +45,8 @@ public struct ServerSetting : INetSerializable
         writer.Put(maxFrame);
         writer.Put((byte)masterLeaveOpt);
         writer.Put(maxCount);
+        writer.Put(waitReadyStageTimeMs);
+        writer.Put(waitFinishStageTimeMs);
     }
 }
 

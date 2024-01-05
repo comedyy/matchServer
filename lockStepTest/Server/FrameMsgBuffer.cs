@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LiteNetLib.Utils;
 
 public class FrameMsgBuffer
@@ -37,14 +38,15 @@ public class FrameMsgBuffer
         _allMessage.Add(writer.CopyData());
     }
 
-    internal ServerReconnectMsgResponse GetReconnectMsg(int clientCurrentFrame)
+    internal ServerReconnectMsgResponse GetReconnectMsg(int clientCurrentFrame, Dictionary<int, int> finishedStageFrames)
     {
         List<byte[]> list = new List<byte[]>();
         list.AddRange(_allMessage.GetRange(clientCurrentFrame, _allMessage.Count - clientCurrentFrame));
 
         ServerReconnectMsgResponse response = new ServerReconnectMsgResponse(){
             startFrame = clientCurrentFrame,
-            bytes = list
+            bytes = list, 
+            stageFinishedFrames = finishedStageFrames.Select(m=>new IntPair2(){Item1 = m.Key, Item2 = m.Value}).ToArray()
         };
 
         return response;

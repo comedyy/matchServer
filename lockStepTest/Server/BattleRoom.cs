@@ -106,7 +106,6 @@ public class ServerBattleRoom
             if(!_netPeers[i].isReady) return;
         }
 
-
         IsBattleStart = true;
 
         _server = new Server(_setting, _socket, _netPeers.Select(m=>m.id).ToList());
@@ -117,6 +116,11 @@ public class ServerBattleRoom
             StartMsg = _startBattle
         };
         _server.StartBattle(startMessage);
+
+        for(int i = 0; i < _netPeers.Count; i++)
+        {
+            SetIsReady(_netPeers[i].id, false);
+        }
     }
 
     public void OnReceiveMsg(int peer, NetDataReader reader)
@@ -124,11 +128,11 @@ public class ServerBattleRoom
         _server.AddMessage(peer, reader);
     }
 
-    public void Update(float deltaTime)
+    public void Update(float deltaTime, float roomTime)
     {
         for(int i = 0; i < _speed; i++)
         {
-            _server?.Update(deltaTime);
+            _server?.Update(deltaTime, roomTime);
         }
 
         if(_server != null && _server.IsBattleEnd)
@@ -142,10 +146,6 @@ public class ServerBattleRoom
         _server?.Destroy();
         _server = null;
         IsBattleStart = false;
-        for(int i = 0; i < _netPeers.Count; i++)
-        {
-            SetIsReady(_netPeers[i].id, false);
-        }
     }
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
@@ -252,6 +252,7 @@ public class ServerBattleRoom
 
         var message = _server._startMessage;
         message.isReconnect = true;
-        _server.StartBattle(message);
+
+        _socket.SendMessage(peer, message);
     }
 }

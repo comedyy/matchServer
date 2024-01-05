@@ -233,20 +233,20 @@ public struct FrameHash : INetSerializable
 
 public struct FinishRoomMsg : INetSerializable
 {
-    public int stageIndex;
+    public int nextStageValue;
     internal int id;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.FinishCurrentStage);
-        writer.Put(stageIndex);
+        writer.Put(nextStageValue);
         writer.Put(id);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        stageIndex = reader.GetInt();
+        nextStageValue = reader.GetInt();
         id = reader.GetInt();
     }
 }
@@ -293,20 +293,17 @@ public struct PauseGameMsg : INetSerializable
 public struct ServerReadyForNextStage : INetSerializable
 {
     public int stageIndex;
-    public int frameIndex;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ServerReadyForNextStage);
         writer.Put(stageIndex);
-        writer.Put(frameIndex);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         stageIndex = reader.GetInt();
-        frameIndex = reader.GetInt();
     }
 }
 
@@ -314,17 +311,20 @@ public struct ServerReadyForNextStage : INetSerializable
 public struct ServerEnterLoading : INetSerializable
 {
     public int frameIndex;
+    public int stage;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ServerEnterLoading);
         writer.Put(frameIndex);
+        writer.Put(stage);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         frameIndex = reader.GetInt();
+        stage = reader.GetInt();
     }
 }
 
@@ -397,6 +397,7 @@ public struct ServerReconnectMsgResponse : INetSerializable
 {
     public int startFrame;
     public List<byte[]> bytes;
+    public IntPair2[] stageFinishedFrames;
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ServerReConnect);
@@ -405,6 +406,15 @@ public struct ServerReconnectMsgResponse : INetSerializable
         for(int i = 0; i < bytes.Count; i++)
         {
             writer.PutBytesWithLength(bytes[i]);
+        }
+
+        writer.Put(stageFinishedFrames == null ? (byte)0 : (byte)stageFinishedFrames.Length);
+        if(stageFinishedFrames != null)
+        {
+            for(int i = 0; i < stageFinishedFrames.Length; i++)
+            {
+                writer.Put(stageFinishedFrames[i]);
+            }
         }
     }
 
@@ -419,5 +429,31 @@ public struct ServerReconnectMsgResponse : INetSerializable
         {
             bytes.Add(reader.GetBytesWithLength());
         }
+
+        var size1 = reader.GetByte();
+        stageFinishedFrames = new IntPair2[size1];
+        for(int i = 0; i < size1; i++)
+        {
+            stageFinishedFrames[i] = reader.Get<IntPair2>();
+        }
+    }
+}
+
+
+public struct IntPair2 : INetSerializable
+{
+    public int Item1;
+    public int Item2;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        Item1 = reader.GetInt();
+        Item2 = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put(Item1);
+        writer.Put(Item2);
     }
 }

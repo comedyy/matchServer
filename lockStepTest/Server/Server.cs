@@ -11,11 +11,19 @@ enum GameState
     End,
 }
 
+struct PlayerInfo
+{
+    public int finishedStageValue;
+    public float finishStageTime;
+
+    public int readyStageValue;
+    public float readyStageTime;
+}
 
 public class Server
 {
     public ushort _frame;
-    public float totalSeconds;
+    public float _totalSeconds;
     public float preFrameSeconds;
     float _tick;
     ServerSyncType _syncType;
@@ -24,38 +32,51 @@ public class Server
     IServerGameSocket _socket;
     private List<int> _netPeers;
     HashChecker _hashChecker;
-    int pauseFrame = -1;
+    int _pauseFrame = -1;
     
     GameState _gameState = GameState.NotBegin;
     private int _stageIndex;
-    int[] _stages;
-    int[] _finishRooms;
+    PlayerInfo[] _playerInfos;
+    public Dictionary<int, int> _finishStageFrames = new Dictionary<int, int>();
 
     FrameMsgBuffer _frameMsgBuffer = new FrameMsgBuffer();
     public RoomStartBattleMsg _startMessage;
+    float _waitFinishStageTime = 0;
+    float _waitReadyStageTime = 0;
+    float _roomTime;
 
     public Server(ServerSetting serverSetting, IServerGameSocket socket, List<int> netPeers)
     {
         _frame = 0;
-        totalSeconds = 0;
+        _totalSeconds = 0;
         preFrameSeconds = 0;
         _tick = serverSetting.tick;
         _socket = socket;
         _netPeers = netPeers;
         _syncType = serverSetting.syncType;
         _maxFrame = serverSetting.maxFrame == 0 ? ushort.MaxValue : serverSetting.maxFrame;
+
+        _waitFinishStageTime = serverSetting.waitFinishStageTimeMs == 0 ? 10 : serverSetting.waitFinishStageTimeMs / 1000f;
+        _waitReadyStageTime = serverSetting.waitReadyStageTimeMs == 0 ? 10 : serverSetting.waitReadyStageTimeMs / 1000f;
     }
 
-    bool IsPause => pauseFrame != int.MaxValue;
+    bool IsPause => _pauseFrame != int.MaxValue;
 
-    public void Update(float deltaTime)
+    public void Update(float deltaTime, float roomTime)
     {
+        _roomTime = roomTime;
         if(_gameState != GameState.Running) return;
-        if(pauseFrame <= _frame) return; // 用户手动暂停
+
+        UpdateReadyNextStageRoom();
+
+        if(_pauseFrame <= _frame) return; // 用户手动暂停
+
+        UpdateFinishRoom();
+
         if(!IsPause && deltaTime == 0) return; // // TImeScale == 0 并且未暂停，就是游戏在初始化
         
-        totalSeconds += deltaTime;
-        if(preFrameSeconds + _tick > totalSeconds)
+        _totalSeconds += deltaTime;
+        if(preFrameSeconds + _tick > _totalSeconds)
         {
             return;
         }
@@ -92,56 +113,47 @@ public class Server
         else if(msgType == (byte)MsgType1.ReadyForNextStage)
         {
             ReadyStageMsg ready = reader.Get<ReadyStageMsg>();
-            var roomIndex = ready.stageIndex;
+            var readyStageValue = ready.stageIndex;
             var id = ready.id;
-            _stages[id] = roomIndex;
-            var stageIndx = _stages.Min();
+            _playerInfos[id].readyStageValue = readyStageValue;
+            _playerInfos[id].readyStageTime = _roomTime;
 
-            if(stageIndx > _stageIndex)
+            if(readyStageValue <= _stageIndex)
             {
-                _stageIndex = stageIndx;
                 _socket.SendMessage(_netPeers, new ServerReadyForNextStage(){
-                    stageIndex = _stageIndex,
-                    frameIndex = _frame
+                    stageIndex = readyStageValue,
                 });
-
-                pauseFrame = int.MaxValue;
+                return;
             }
+
+            UpdateReadyNextStageRoom();
             
             return;
         }
         else if(msgType == (byte)MsgType1.FinishCurrentStage)
         {
             FinishRoomMsg ready = reader.Get<FinishRoomMsg>();
-            var roomIndex = ready.stageIndex;
+            var finishedStageValue = ready.nextStageValue;
             var id = ready.id;
-            _finishRooms[id] = roomIndex;
-            var stageIndx = _finishRooms.Min();
+            _playerInfos[id].finishedStageValue = finishedStageValue;
+            _playerInfos[id].finishStageTime = _roomTime;
 
-            if(stageIndx > _stageIndex)
+            if(finishedStageValue < _stageIndex)    // 断线情况
             {
-                pauseFrame = _frame;
- 
-                if(stageIndx == 999)
-                {
-                    // End battle
-                    _gameState = GameState.End;
-                    _socket.SendMessage(_netPeers, new ServerCloseMsg());
-                }
-                else
-                {
-                    _socket.SendMessage(_netPeers, new ServerEnterLoading(){
-                        frameIndex = _frame,
-                    });
-                }
+                _socket.SendMessage(peer, new ServerEnterLoading(){
+                    frameIndex = _finishStageFrames[finishedStageValue]
+                });
+                return;
             }
+
+            UpdateFinishRoom();
             
             return;
         }
         else if(msgType == (byte)MsgType1.ServerReConnect)
         {
             ServerReconnectMsg ready = reader.Get<ServerReconnectMsg>();
-            _socket.SendMessage(peer, _frameMsgBuffer.GetReconnectMsg(ready.startFrame));
+            _socket.SendMessage(peer, _frameMsgBuffer.GetReconnectMsg(ready.startFrame, _finishStageFrames));
             return;
         }
         // else if(msgType == (byte)MsgType1.PauseGame)
@@ -165,6 +177,73 @@ public class Server
         _frameMsgBuffer.AddFromReader(reader);
     }
 
+    private void UpdateReadyNextStageRoom()
+    {
+        var maxReadyStageValue = _playerInfos.Max(m=>m.readyStageValue);
+        if(maxReadyStageValue <= _stageIndex) return;// 都在当前stage
+
+        bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
+        for(int i = 0; i < _playerInfos.Length; i++)
+        {
+            if(_playerInfos[i].readyStageValue == maxReadyStageValue)
+            {
+                var diff = _roomTime - _playerInfos[i].readyStageTime;
+                var isOK = diff > _waitReadyStageTime;
+                timeout |= isOK;
+            }
+        }
+
+        var condition = timeout || _playerInfos.Min(m=>m.readyStageValue) == maxReadyStageValue;
+        if(condition)
+        {
+            _stageIndex = maxReadyStageValue;
+            _socket.SendMessage(_netPeers, new ServerReadyForNextStage(){
+                stageIndex = _stageIndex,
+            });
+
+            _pauseFrame = int.MaxValue;
+        }
+    }
+
+    private void UpdateFinishRoom()
+    {
+        var maxFinishedStageValue = _playerInfos.Max(m=>m.finishedStageValue);
+        if(maxFinishedStageValue < _stageIndex) return; // 都在当前stage
+
+        bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
+        for(int i = 0; i < _playerInfos.Length; i++)
+        {
+            if(_playerInfos[i].finishedStageValue == maxFinishedStageValue)
+            {
+                var diff = _roomTime - _playerInfos[i].finishStageTime;
+                var isOK = diff > _waitFinishStageTime;
+                timeout |= isOK;
+            }
+        }
+
+        var condition = timeout || _playerInfos.Min(m=>m.finishedStageValue) == maxFinishedStageValue;
+        if(condition)
+        {
+            _pauseFrame = _frame;
+
+            if(maxFinishedStageValue == 999)
+            {
+                // End battle
+                _gameState = GameState.End;
+                _socket.SendMessage(_netPeers, new ServerCloseMsg());
+            }
+            else
+            {
+                var stopFrame = _frame + 1;
+                _socket.SendMessage(_netPeers, new ServerEnterLoading(){
+                    frameIndex = stopFrame,
+                    stage = maxFinishedStageValue
+                });
+                _finishStageFrames[maxFinishedStageValue] = stopFrame;
+            }
+        }
+    }
+
     private bool CheckPauseStateOpt(MessageBit messageBit)
     {
         return (messageBit & (MessageBit.ChooseSkill | MessageBit.RechooseSkill | MessageBit.CullSkill | MessageBit.Reborn | MessageBit.ExitGame)) > 0;
@@ -185,8 +264,8 @@ public class Server
     public void StartBattle(RoomStartBattleMsg startMessage)
     {
         _hashChecker = new HashChecker(_netPeers.Count);
-        _stages = new int[_netPeers.Count];
-        _finishRooms = new int[_netPeers.Count];
+        _playerInfos = new PlayerInfo[_netPeers.Count];
+
         _gameState = GameState.Running;
         
         _socket.SendMessage(_netPeers, startMessage);
