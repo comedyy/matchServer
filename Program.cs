@@ -26,11 +26,11 @@ class Program
 
         while(!NeedStop)
         {
-            // var line =  Console.ReadLine();
-            // if(line != null)
-            // {
-            //     ProcessGM(line);
-            // }
+            var line =  Console.ReadLine();
+            if(line != null)
+            {
+                ProcessGM(line);
+            }
 
             Thread.Sleep(mainThreadSleepTime);
             mainThreadSleepTime = 100;
