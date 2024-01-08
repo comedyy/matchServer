@@ -32,7 +32,6 @@ class Program
         }
 
         Console.WriteLine(" ---------------server end------------------ ");
-        Console.ReadLine();
     }
 
     private static void ProcessGM(string line)
