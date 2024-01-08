@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 public class ProfilerTick
 {
+    public static bool EnableProfiler{get;set;}
     Stopwatch _watch;
     int _logicTime = 0;
     string _profilerName;
@@ -27,6 +28,8 @@ public class ProfilerTick
 
     public void AddTick(int logicMs, Func<string> value = null)
     {
+        if(!EnableProfiler) return;
+
         _logicTime += logicMs;
         if(_watch.ElapsedMilliseconds > 5000) // 5秒tick一次
         {

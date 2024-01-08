@@ -9,11 +9,66 @@ using System.Threading;
 class Program
 {
     static NetProcessor _netProcessor;
+    static Thread _thread;
+    static bool NeedStop;
+    static bool ShowInfo;
+
     static void Main(string[] args)
     {
         Init();
         // NetMgr.Instance.Init();
 
+        ThreadStart threadStart = ProcessLogic;
+        _thread = new Thread(threadStart);
+        _thread.Start();
+
+        while(!NeedStop)
+        {
+            var line =  Console.ReadLine();
+            if(line != null)
+            {
+                ProcessGM(line);
+            }
+        }
+
+        Console.WriteLine(" ---------------server end------------------ ");
+        Console.ReadLine();
+    }
+
+    private static void ProcessGM(string line)
+    {
+        Console.WriteLine($"input command 【{line}】");
+        try
+        {
+            if(line == "exit")
+            {
+                NeedStop = true;
+            }
+            else if(line == "reload")
+            {
+
+            }
+            else if(line == "info")
+            {
+                ProfilerTick.EnableProfiler = !ProfilerTick.EnableProfiler;
+            }
+            else if(line == "help")
+            {
+                Console.WriteLine(@"
+                exit: 退出
+                reload: 加载配置
+                info:打开profiler
+                ");
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine("==== ERRROR ====" + e.Message + " " + e.StackTrace);   
+        }
+    }
+
+    private static void ProcessLogic()
+    {
         Stopwatch watch = new Stopwatch();
         watch.Start();
 
@@ -23,7 +78,7 @@ class Program
 
         ProfilerTick _watch = new ProfilerTick("Program");
 
-        while (true) // 最低50毫秒一个循环
+        while (!NeedStop) // 最低50毫秒一个循环
         {
             frame ++;
             var targetMs = frame * 50;
@@ -40,9 +95,6 @@ class Program
             msTick = watch.ElapsedMilliseconds - msEndOfFrame;
             msEndOfFrame = watch.ElapsedMilliseconds;
         }
-
-        Console.WriteLine(" ---------------server end------------------ ");
-        Console.ReadLine();
     }
 
     private static void Init()
