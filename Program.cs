@@ -106,8 +106,22 @@ class Program
         }
     }
 
+    static Dictionary<string, int> _dicConfigs = new Dictionary<string, int>();
     private static void Init()
     {
-        _netProcessor = new NetProcessor(new GameServerSocket(1000));
+        var lines = File.ReadAllLines("../../../appConfig.txt");
+        foreach(var x in lines)
+        {
+            var args = x.Split(",", StringSplitOptions.RemoveEmptyEntries);
+            if(args.Length < 2) continue;
+
+            _dicConfigs[args[0]] = int.Parse(args[1]);
+
+            Console.WriteLine($"Load {args}");
+        }
+
+        int port;
+        if (!_dicConfigs.TryGetValue("port", out port)) port = 5000;
+        _netProcessor = new NetProcessor(new GameServerSocket(1000, port));
     }
 }

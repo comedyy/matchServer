@@ -10,12 +10,15 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     private NetManager _netServer;
     private NetDataWriter _dataWriter;
     private int _maxUserConnected;
+    private int _port;
+
     Dictionary<NetPeer, int> _lookupPeerToId = new Dictionary<NetPeer, int>();
     Dictionary<int, NetPeer> _lookupIdToPeer = new Dictionary<int, NetPeer>();
 
-    public GameServerSocket(int countUser)
+    public GameServerSocket(int countUser, int port)
     {
         this._maxUserConnected = countUser;
+        this._port = port;
         NetDebug.Logger = this;
     }
 
@@ -25,8 +28,10 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         _dataWriter = new NetDataWriter();
         _netServer = new NetManager(this);
         _netServer.UnconnectedMessagesEnabled = true;
-        _netServer.Start(5000);
+        _netServer.Start(_port);
         _netServer.UpdateTime = 15;
+
+        Console.WriteLine($"start port:{_port}");
     }
 
     public void Update()

@@ -41,6 +41,7 @@ public class NetProcessor
             case MsgType1.RoomReady: SetIsReady(peer, reader.Get<RoomReadyMsg>()); break;
             case MsgType1.StartRequest : StartBattle(peer, reader.Get<StartBattleRequest>()); break;
             case MsgType1.SetSpeed: SetRoomSpeed(peer, reader.Get<SetServerSpeedMsg>()); break;
+            case MsgType1.RoomChangeUserPos: ChangeUserPos(peer, reader.Get<RoomChangeUserPosMsg>()); break;
             case MsgType1.GetAllRoomList:
                 break;
             default:
@@ -49,6 +50,14 @@ public class NetProcessor
                     room.OnReceiveMsg(peer, reader);
                 }
                 break;
+        }
+    }
+
+    private void ChangeUserPos(int peer, RoomChangeUserPosMsg setServerSpeedMsg)
+    {
+        if(_allUserRooms.TryGetValue(peer, out var room))
+        {
+            room.ChangeUserPos(peer, setServerSpeedMsg.fromIndex, setServerSpeedMsg.toIndex);
         }
     }
 
@@ -112,6 +121,10 @@ public class NetProcessor
             {
                 room.SendReconnectBattleMsg(peer);
             }
+        }
+        else
+        {
+            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
         }
     }
 

@@ -32,7 +32,8 @@ public enum MsgType1 : byte
     LeaveUser = 113,
     RoomReady = 114,
     GetUserState = 115,
-    RoomOpt = 116,
+    RoomEventSync = 116, // 房间的事件通知
+    RoomChangeUserPos = 117,
 }
 
 [Serializable]

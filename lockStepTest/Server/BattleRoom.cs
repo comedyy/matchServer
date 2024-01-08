@@ -100,7 +100,7 @@ public class ServerBattleRoom
     public void StartBattle(int peer)
     {
         if(_netPeers.Count == 0) return;
-        if(peer != _netPeers[0].id) return;
+        if(peer != Master) return;
 
         for(int i = 1; i < _netPeers.Count; i++)
         {
@@ -224,7 +224,6 @@ public class ServerBattleRoom
         // 1. 人走光了
         if(_netPeers.Count == 0) 
         {
-            Console.WriteLine("00000");
             return true;
         }
 
@@ -234,7 +233,6 @@ public class ServerBattleRoom
 
         if(isAllOffLine) 
         {
-            Console.WriteLine("xxxx");
             return true;
         }
 
@@ -245,9 +243,7 @@ public class ServerBattleRoom
     {
         if(_server == null)
         {
-            _socket.SendMessage(peer, new RoomErrorCode(){
-                roomError = RoomError.BattleNotExit
-            });
+            Error(peer, RoomError.BattleNotExit);
             return;
         }
 
@@ -255,5 +251,40 @@ public class ServerBattleRoom
         message.isReconnect = true;
 
         _socket.SendMessage(peer, message);
+    }
+
+    internal void ChangeUserPos(int peer, byte fromIndex, byte toIndex)
+    {
+        if(peer != Master)
+        {
+            Error(peer, RoomError.AuthError);
+            return;
+        }
+
+        if(fromIndex <= 0 || fromIndex >= _netPeers.Count) 
+        {
+            Error(peer, RoomError.ChangeErrorOutOfIndex);
+            return;
+        }
+        if(toIndex <= 0 || toIndex >= _netPeers.Count) 
+        {
+            Error(peer, RoomError.ChangeErrorOutOfIndex);
+            return;
+        }
+
+        var fromItem = _netPeers[fromIndex];
+        var toItem = _netPeers[toIndex];
+
+        _netPeers[fromIndex] = toItem;
+        _netPeers[toIndex] = fromItem;
+
+        BroadcastRoomInfo();
+    }
+
+    void Error(int peer, RoomError error)
+    {
+        _socket.SendMessage(peer, new RoomErrorCode(){
+            roomError = error
+        });
     }
 }

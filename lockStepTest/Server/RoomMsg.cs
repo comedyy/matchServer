@@ -23,8 +23,8 @@ public struct ServerSetting : INetSerializable
     public ushort maxFrame;
     public RoomMasterLeaveOpt masterLeaveOpt;
     public byte maxCount;
-    internal int waitReadyStageTimeMs;
-    internal int waitFinishStageTimeMs;
+    internal byte waitReadyStageTimeMs;
+    internal byte waitFinishStageTimeMs;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -34,8 +34,8 @@ public struct ServerSetting : INetSerializable
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
         maxCount = reader.GetByte();
 
-        waitReadyStageTimeMs = reader.GetInt();
-        waitFinishStageTimeMs = reader.GetInt();
+        waitReadyStageTimeMs = reader.GetByte();
+        waitFinishStageTimeMs = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -362,6 +362,8 @@ public enum RoomError : byte
     JoinRoomErrorHasRoom = 2,
     CreateRoomErrorHasRoom = 3,
     BattleNotExit = 4,
+    AuthError = 5,
+    ChangeErrorOutOfIndex = 6,
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -489,8 +491,30 @@ public struct SyncRoomOptMsg : INetSerializable
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)MsgType1.RoomOpt);
+        writer.Put((byte)MsgType1.RoomEventSync);
         writer.Put((byte)state);
     }
 }
+
+
+public struct RoomChangeUserPosMsg : INetSerializable
+{
+    public byte fromIndex;
+    public byte toIndex;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        fromIndex = reader.GetByte();
+        toIndex = reader.GetByte();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.RoomChangeUserPos);
+        writer.Put(fromIndex);
+        writer.Put(toIndex);
+    }
+}
+
+
 
