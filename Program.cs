@@ -26,11 +26,11 @@ class Program
 
         while(!NeedStop)
         {
-            var line =  Console.ReadLine();
-            if(line != null)
-            {
-                ProcessGM(line);
-            }
+            // var line =  Console.ReadLine();
+            // if(line != null)
+            // {
+            //     ProcessGM(line);
+            // }
 
             Thread.Sleep(mainThreadSleepTime);
             mainThreadSleepTime = 100;
@@ -58,8 +58,7 @@ class Program
             }
             else if(line == "wait")
             {
-                mainThreadSleepTime = 5000;
-                Console.SetIn(null);
+                mainThreadSleepTime = 10000;
             }
             else if(line == "help")
             {
