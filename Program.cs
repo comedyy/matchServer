@@ -22,6 +22,8 @@ class Program
         _thread = new Thread(threadStart);
         _thread.Start();
 
+        Console.WriteLine(" ---------------server start------------------ ");
+
         while(!NeedStop)
         {
             var line =  Console.ReadLine();
