@@ -109,7 +109,7 @@ class Program
     static Dictionary<string, int> _dicConfigs = new Dictionary<string, int>();
     private static void Init()
     {
-        var lines = File.ReadAllLines("../../../appConfig.txt");
+        var lines = File.ReadAllLines("appConfig.txt");
         foreach(var x in lines)
         {
             var args = x.Split(",", StringSplitOptions.RemoveEmptyEntries);
@@ -117,7 +117,7 @@ class Program
 
             _dicConfigs[args[0]] = int.Parse(args[1]);
 
-            Console.WriteLine($"Load {args}");
+            Console.WriteLine($"Load {x}");
         }
 
         int port;
