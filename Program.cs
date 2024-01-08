@@ -59,6 +59,7 @@ class Program
             else if(line == "wait")
             {
                 mainThreadSleepTime = 5000;
+                Console.SetIn(null);
             }
             else if(line == "help")
             {
