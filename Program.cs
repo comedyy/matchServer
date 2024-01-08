@@ -66,7 +66,7 @@ class Program
                 exit: 退出
                 reload: 加载配置
                 info:打开profiler
-                wait:暂停应用程序输入5秒
+                wait:暂停应用程序输入10秒,这个时候可以用于输入ssh输入。
                 ");
             }
         }
