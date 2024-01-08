@@ -11,7 +11,7 @@ class Program
     static NetProcessor _netProcessor;
     static Thread _thread;
     static bool NeedStop;
-    static bool ShowInfo;
+    static int mainThreadSleepTime;
 
     static void Main(string[] args)
     {
@@ -31,6 +31,9 @@ class Program
             {
                 ProcessGM(line);
             }
+
+            Thread.Sleep(mainThreadSleepTime);
+            mainThreadSleepTime = 100;
         }
 
         Console.WriteLine(" ---------------server end------------------ ");
@@ -53,12 +56,17 @@ class Program
             {
                 ProfilerTick.EnableProfiler = !ProfilerTick.EnableProfiler;
             }
+            else if(line == "wait")
+            {
+                mainThreadSleepTime = 5000;
+            }
             else if(line == "help")
             {
                 Console.WriteLine(@"
                 exit: 退出
                 reload: 加载配置
                 info:打开profiler
+                wait:暂停应用程序输入5秒
                 ");
             }
         }
