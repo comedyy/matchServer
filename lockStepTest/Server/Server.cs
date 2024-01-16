@@ -156,22 +156,22 @@ public class Server
             _socket.SendMessage(peer, _frameMsgBuffer.GetReconnectMsg(ready.startFrame, _finishStageFrames));
             return;
         }
-        // else if(msgType == (byte)MsgType1.PauseGame)
-        // {
-        //     PauseGameMsg pause = reader.Get<PauseGameMsg>();
+        else if(msgType == (byte)MsgType1.PauseGame)
+        {
+            PauseGameMsg pause = reader.Get<PauseGameMsg>();
 
-        //     if(pause.pause)
-        //     {
-        //         pauseFrame = _frame + 1;
-        //     }
-        //     else
-        //     {
-        //         pauseFrame = int.MaxValue;
-        //     }
+            if(pause.pause)
+            {
+                _pauseFrame = _frame + 1;
+            }
+            else
+            {
+                _pauseFrame = int.MaxValue;
+            }
 
-        //     _socket.SendMessage(_netPeers, pause);
-        //     return;
-        // }
+            _socket.SendMessage(_netPeers, pause);
+            return;
+        }
 
         reader.GetByte(); // reader去掉msgType
         _frameMsgBuffer.AddFromReader(reader);

@@ -126,6 +126,8 @@ public class ServerBattleRoom
 
     public void OnReceiveMsg(int peer, NetDataReader reader)
     {
+        if(_server == null) return;
+
         _server.AddMessage(peer, reader);
     }
 
