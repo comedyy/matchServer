@@ -292,7 +292,7 @@ public class NetProcessor
     void RemoveRoom(ServerBattleRoom room, RoomEndReason roomEndReason)
     {
         var allPeers = room.AllPeers;
-        room.ForceClose();
+        room.ForceClose(roomEndReason == RoomEndReason.RoomMasterLeave ? SyncRoomOptMsg.RoomOpt.MasterLeaveRoomEnd : SyncRoomOptMsg.RoomOpt.RoomEnd);
         _allRooms.Remove(room.RoomId);
 
         foreach(var x in allPeers)

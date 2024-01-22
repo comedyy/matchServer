@@ -519,7 +519,7 @@ public struct SyncRoomOptMsg : INetSerializable
 {
     public enum RoomOpt
     {
-        None, Kick, Leave
+        None, Kick, Leave, MasterLeaveRoomEnd, RoomEnd
     }
 
     public RoomOpt state;

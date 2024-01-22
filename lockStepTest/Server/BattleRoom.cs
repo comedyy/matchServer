@@ -4,6 +4,7 @@ using LiteNetLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static SyncRoomOptMsg;
 
 
 public struct RoomMemberInfo
@@ -198,9 +199,11 @@ public class ServerBattleRoom
         _speed = speed;
     }
 
-    internal void ForceClose()
+    internal void ForceClose(RoomOpt reason)
     {
         _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new UpdateRoomMemberList());
+        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new SyncRoomOptMsg(){ state = reason});
+
         _netPeers.Clear();
     }
 
