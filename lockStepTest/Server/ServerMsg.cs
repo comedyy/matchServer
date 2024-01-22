@@ -16,13 +16,14 @@ public enum MsgType1 : byte
     ServerEnterLoading = 10,  // 完成当前的stage小关, 服务器回包
     Unsync = 11,
     ServerReConnect = 12,
+    BattleFailed = 13,
     ServerMsgEnd___ = 100, // 服务器消息最后
 
     CreateRoom = 101,
     JoinRoom = 102,
     StartRequest = 103,
     SyncRoomMemberList = 104,
-    GetAllRoomList = 105,
+    GetAllRoomList = 105,   // 获得所有的房间列表，无连接
     SetSpeed = 107,
     RoomStartBattle = 108,
     ServerClose = 109,
@@ -31,9 +32,14 @@ public enum MsgType1 : byte
     KickUser = 112,
     LeaveUser = 113,
     RoomReady = 114,
-    GetUserState = 115,
+    GetUserState = 115,    // 查询玩家状态。无连接
     RoomEventSync = 116, // 房间的事件通知
     RoomChangeUserPos = 117,
+    RoomSyncLoadingProcess = 118,
+    GetRoomState = 119,   // 获取房间状态，无连接
+    GetRoomStateResponse = 119,   // 获取房间状态，无连接
+    GetUserInfo = 120, 
+    GetUserInfoResponse = 120, 
 }
 
 [Serializable]
@@ -409,14 +415,7 @@ public struct ServerReconnectMsgResponse : INetSerializable
             writer.PutBytesWithLength(bytes[i]);
         }
 
-        writer.Put(stageFinishedFrames == null ? (byte)0 : (byte)stageFinishedFrames.Length);
-        if(stageFinishedFrames != null)
-        {
-            for(int i = 0; i < stageFinishedFrames.Length; i++)
-            {
-                writer.Put(stageFinishedFrames[i]);
-            }
-        }
+        IntPair2.SerializeArray(writer, stageFinishedFrames);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
@@ -431,15 +430,9 @@ public struct ServerReconnectMsgResponse : INetSerializable
             bytes.Add(reader.GetBytesWithLength());
         }
 
-        var size1 = reader.GetByte();
-        stageFinishedFrames = new IntPair2[size1];
-        for(int i = 0; i < size1; i++)
-        {
-            stageFinishedFrames[i] = reader.Get<IntPair2>();
-        }
+        stageFinishedFrames = IntPair2.DeserializeArray(reader);
     }
 }
-
 
 public struct IntPair2 : INetSerializable
 {
@@ -457,4 +450,30 @@ public struct IntPair2 : INetSerializable
         writer.Put(Item1);
         writer.Put(Item2);
     }
+
+    public static void SerializeArray(NetDataWriter writer, IntPair2[] pairs)
+    {
+        ushort count = pairs == null ? (ushort)0 : (ushort)pairs.Length;
+        writer.Put(count);
+        for(int i = 0; i < count; i++)
+        {
+            writer.Put(pairs[i]);
+        }
+    }
+
+    public static IntPair2[] DeserializeArray(NetDataReader reader)
+    {
+        ushort count = reader.GetUShort();
+        IntPair2[] intPair2s = new IntPair2[count];
+        for(int i = 0; i < count; i++)
+        {
+            intPair2s[i] = reader.Get<IntPair2>();
+        }
+
+        return intPair2s;
+    }
 }
+
+
+
+

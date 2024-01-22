@@ -5,10 +5,13 @@ using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-enum RoomEndReason
+public enum RoomEndReason
 {
+    None,
     RoomMasterLeave,
     BattleEnd,
+    AllPeerLeave,
+    AllPeerOffLine,
 }
 
 public class NetProcessor 
@@ -27,6 +30,7 @@ public class NetProcessor
         _serverSocket.OnPeerReconnected = OnReconnect;
         _serverSocket.GetAllRoomList = GetRoomListMsg;
         _serverSocket.GetUserState = GetUserState;
+        _serverSocket.GetRoomState = GetRoomState;
     }
 
     private void OnReceiveMsg(int peer, NetDataReader reader)
@@ -42,6 +46,9 @@ public class NetProcessor
             case MsgType1.StartRequest : StartBattle(peer, reader.Get<StartBattleRequest>()); break;
             case MsgType1.SetSpeed: SetRoomSpeed(peer, reader.Get<SetServerSpeedMsg>()); break;
             case MsgType1.RoomChangeUserPos: ChangeUserPos(peer, reader.Get<RoomChangeUserPosMsg>()); break;
+            case MsgType1.RoomSyncLoadingProcess: SyncLoadingProcess(peer, reader.Get<RoomSyncLoadingProcessMsg>()); break;
+            case MsgType1.GetUserInfo: GetUserJoinInfoResponse(peer, reader.Get<GetUserJoinInfoMsg>().userId); break;
+            case MsgType1.GetRoomState: 
             case MsgType1.GetAllRoomList:
                 break;
             default:
@@ -50,6 +57,22 @@ public class NetProcessor
                     room.OnReceiveMsg(peer, reader);
                 }
                 break;
+        }
+    }
+
+    private void GetUserJoinInfoResponse(int peer, int userId)
+    {
+        if(_allUserRooms.TryGetValue(peer, out var room))
+        {
+            room.GetUserJoinInfoResponse(peer, userId);
+        }
+    }
+
+    private void SyncLoadingProcess(int peer, RoomSyncLoadingProcessMsg roomSyncLoadingProcessMsg)
+    {
+        if(_allUserRooms.TryGetValue(peer, out var room))
+        {
+            room.UpdateLoadingProcess(peer, roomSyncLoadingProcessMsg);
         }
     }
 
@@ -82,9 +105,7 @@ public class NetProcessor
 
     private RoomListMsg GetRoomListMsg()
     {
-        var roomList = _allRooms.Values.Where(m=>!m.IsBattleStart).Select(m=>new RoomInfoMsg(){
-            name = m.roomName, count = m.MemberCount, roomId = m.RoomId
-        });
+        var roomList = _allRooms.Values.Where(m=>!m.IsBattleStart).Select(m=>m.GetRoomInfoMsg());
 
         return new RoomListMsg(){
             roomList = roomList.ToArray()
@@ -100,6 +121,21 @@ public class NetProcessor
         }
 
         return new GetUserStateMsg(){ userId = peerId, state = state};
+    }
+
+    
+    private GetRoomStateResponse GetRoomState(int roomId)
+    {
+        if(_allRooms.TryGetValue(roomId, out var room))
+        {
+            return new GetRoomStateResponse(){
+                roomId = roomId, infoMsg = room.GetRoomInfoMsg()
+            };
+        }
+
+        return new GetRoomStateResponse(){
+            roomId = roomId, infoMsg = default
+        };;
     }
 
     private void StartBattle(int peer, StartBattleRequest startBattleRequest)
@@ -179,7 +215,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.heroId))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.heroId, joinRoomMsg.heroLevel, joinRoomMsg.heroStar))
             {
                 _allUserRooms[peer] = room;
             }
@@ -204,17 +240,17 @@ public class NetProcessor
         }
 
         var roomId = ++_roomId;
-        var room = new ServerBattleRoom(roomId, msg.roomName, msg.startBattleMsg, _serverSocket, msg.setting);
+        var room = new ServerBattleRoom(roomId, msg.roomType,  msg.roomLevel, msg.version, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
-            roomId = roomId, joinMessage = msg.join, heroId = msg.heroId, name = msg.name
+            roomId = roomId, joinMessage = msg.join, heroId = msg.heroId, name = msg.name, heroStar = msg.heroStar, heroLevel = msg.heroLevel
         });
 
         Console.WriteLine($"CreateRoom:{roomId}");
     }
 
-    List<ServerBattleRoom> _removeRooms = new List<ServerBattleRoom>();
+    List<(ServerBattleRoom, RoomEndReason)> _removeRooms = new List<(ServerBattleRoom, RoomEndReason)>();
     public void OnUpdate(float deltaTime)
     {
         _serverTime += deltaTime;
@@ -230,7 +266,7 @@ public class NetProcessor
     float _lastClearRoomTime = 0;
     private void CheckClearRoom()
     {
-        if(_serverTime - _lastClearRoomTime < 5)
+        if(_serverTime - _lastClearRoomTime < 1)
         {
             return;
         }
@@ -240,15 +276,16 @@ public class NetProcessor
         _removeRooms.Clear();
         foreach(var x in _allRooms.Values)
         {
-            if(x.NeedDestroy(_serverTime))
+            var removeRoomReason = x.NeedDestroy(_serverTime);
+            if(removeRoomReason != RoomEndReason.None)
             {
-                _removeRooms.Add(x);
+                _removeRooms.Add((x, removeRoomReason));
             }
         }
 
         foreach(var room in _removeRooms)
         {
-            RemoveRoom(room, RoomEndReason.BattleEnd);
+            RemoveRoom(room.Item1, room.Item2);
         }
     }
 

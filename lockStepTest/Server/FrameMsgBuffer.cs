@@ -19,7 +19,7 @@ public class FrameMsgBuffer
 
         if(remain < length)
         {
-            Console.WriteLine("remain buffer < incomingFrameMsg {remain} {length}");
+            Console.WriteLine($"remain buffer < incomingFrameMsg {remain} {length}");
             return;
         }
 

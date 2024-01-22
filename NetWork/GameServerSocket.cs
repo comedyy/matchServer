@@ -97,6 +97,13 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
             _dataWriter.Put(msg);
             _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
         }
+        else if(msgType == MsgType1.GetRoomState && GetRoomState != null)
+        {
+            var msg = GetRoomState(reader.Get<GetRoomStateMsg>().idRoom);
+            _dataWriter.Reset();
+            _dataWriter.Put(msg);
+            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint); 
+        }
         else if(msgType == MsgType1.GetUserState && GetUserState != null)
         {
             var msg = GetUserState(reader.Get<GetUserStateMsg>().userId);
@@ -177,6 +184,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public Action<int, bool> OnPeerReconnected{get;set;}
     public Func<RoomListMsg> GetAllRoomList{get;set;}
     public Func<int, GetUserStateMsg> GetUserState{get;set;}
+    public Func<int, GetRoomStateResponse> GetRoomState{get;set;}
 
     public void WriteNet(NetLogLevel level, string str, params object[] args)
     {

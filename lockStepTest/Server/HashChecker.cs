@@ -13,6 +13,7 @@ public class HashChecker
 {
     Dictionary<int, FrameHash>[] _listHash;
     List<int> notSameIndexs = null;
+    int _checkedFrame = 0;
 
     public bool NotSame => notSameIndexs != null && notSameIndexs.Any(m=>m != -1);
 
@@ -28,6 +29,7 @@ public class HashChecker
     public string[] AddHash(FrameHash hash)
     {
         if(NotSame) return null;
+        if(_checkedFrame >= hash.frame) return null;
 
         var id = hash.id;
         var list = _listHash[id];
@@ -49,6 +51,7 @@ public class HashChecker
 
     private string[] CheckIndex(int v)
     {
+        _checkedFrame = v;
         List<FrameHash> list = new List<FrameHash>();
         foreach(var x in _listHash)
         {
