@@ -519,20 +519,23 @@ public struct SyncRoomOptMsg : INetSerializable
 {
     public enum RoomOpt
     {
-        None, Kick, Leave, MasterLeaveRoomEnd, RoomEnd
+        None, Kick, Leave, MasterLeaveRoomEnd, RoomEnd, Join
     }
 
     public RoomOpt state;
+    public int param;
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
         state = (RoomOpt)reader.GetByte();
+        param = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.RoomEventSync);
         writer.Put((byte)state);
+        writer.Put(param);
     }
 }
 

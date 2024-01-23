@@ -94,6 +94,7 @@ public class ServerBattleRoom
             }
 
             _netPeers.Add(new RoomMemberInfo(peer, joinMessage, name, heroId, heroLevel, heroStar));
+            _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
         }
         else    // 替换信息
         {
@@ -168,13 +169,12 @@ public class ServerBattleRoom
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
 
-    internal void RemovePeer(int peer, SyncRoomOptMsg.RoomOpt opt)
+    internal void RemovePeer(int peer, RoomOpt opt)
     {
+        _socket.SendMessage(peer, new SyncRoomOptMsg(){ state = opt, param = peer});
         _netPeers.RemoveAll(m=> m.id == peer);
 
         BroadcastRoomInfo();
-
-        _socket.SendMessage(peer, new SyncRoomOptMsg(){ state = opt});
     }
 
     void BroadcastRoomInfo()
@@ -202,6 +202,8 @@ public class ServerBattleRoom
     internal void ForceClose(RoomOpt reason)
     {
         _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new UpdateRoomMemberList());
+
+        _netPeers.RemoveAt(0);  // 队长就不发送了。
         _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new SyncRoomOptMsg(){ state = reason});
 
         _netPeers.Clear();
