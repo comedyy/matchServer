@@ -18,11 +18,12 @@ public class NetProcessor
 {
     Dictionary<int, ServerBattleRoom> _allUserRooms = new Dictionary<int, ServerBattleRoom>();
     Dictionary<int, ServerBattleRoom> _allRooms = new Dictionary<int, ServerBattleRoom>();
-    static int _roomId = 0;
+    public int RoomId { get; private set; }
     float _serverTime;
     IServerGameSocket _serverSocket;
-    public NetProcessor(IServerGameSocket socket)
+    public NetProcessor(IServerGameSocket socket, int initRoomId)
     {
+        RoomId = initRoomId;
         _serverSocket = socket;
         _serverSocket.Start();
         _serverSocket.OnReceiveMsg = OnReceiveMsg;
@@ -239,7 +240,7 @@ public class NetProcessor
             return;
         }
 
-        var roomId = ++_roomId;
+        var roomId = ++RoomId;
         var room = new ServerBattleRoom(roomId, msg.roomType,  msg.roomLevel, msg.version, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
@@ -264,6 +265,7 @@ public class NetProcessor
         CheckClearRoom();
     }
     float _lastClearRoomTime = 0;
+
     private void CheckClearRoom()
     {
         if(_serverTime - _lastClearRoomTime < 1)
