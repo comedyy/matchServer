@@ -86,7 +86,8 @@ public class ServerBattleRoom
     public bool AddPeer(int peer, byte[] joinMessage, string name, uint heroId, uint heroLevel, uint heroStar)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
-        if(index < 0) 
+        var isNewUser = index < 0;
+        if(isNewUser) 
         {
             if(_netPeers.Count >= MaxRoomUsers) // 房间人数FUll
             {
@@ -94,7 +95,6 @@ public class ServerBattleRoom
             }
 
             _netPeers.Add(new RoomMemberInfo(peer, joinMessage, name, heroId, heroLevel, heroStar));
-            _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
         }
         else    // 替换信息
         {
@@ -107,6 +107,11 @@ public class ServerBattleRoom
         }
 
         BroadcastRoomInfo();
+
+        if(isNewUser)
+        {
+            _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
+        }
 
         return true;
     }
@@ -171,7 +176,7 @@ public class ServerBattleRoom
 
     internal void RemovePeer(int peer, RoomOpt opt)
     {
-        _socket.SendMessage(peer, new SyncRoomOptMsg(){ state = opt, param = peer});
+        _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = opt, param = peer});
         _netPeers.RemoveAll(m=> m.id == peer);
 
         BroadcastRoomInfo();
@@ -181,7 +186,7 @@ public class ServerBattleRoom
     {
         if(_netPeers.Count == 0 ) return;
 
-        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), RoomInfo);
+        _socket.SendMessage(_netPeers.Select(m=>m.id), RoomInfo);
     }
 
     UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
@@ -201,10 +206,8 @@ public class ServerBattleRoom
 
     internal void ForceClose(RoomOpt reason)
     {
-        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new UpdateRoomMemberList());
-
-        _netPeers.RemoveAt(0);  // 队长就不发送了。
-        _socket.SendMessage(_netPeers.Select(m=>m.id).ToList(), new SyncRoomOptMsg(){ state = reason});
+        _socket.SendMessage(_netPeers.Select(m=>m.id), new UpdateRoomMemberList());
+        _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = reason, param = _netPeers[0].id});
 
         _netPeers.Clear();
     }
