@@ -43,7 +43,7 @@ public class ServerBattleRoom
 
     public bool IsBattleStart {get; private set;}
     public int Master => _netPeers[0].id;
-    public IEnumerable<int> AllPeers => _netPeers.Select(m=>m.id);
+    public List<int> AllPeers => _netPeers.Select(m=>m.id).ToList();
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
@@ -218,6 +218,11 @@ public class ServerBattleRoom
     internal void SetUserOnLineState(int peer, bool v, float _serverTime)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
+        if(index < 0)
+        {
+            return;
+        }
+        
         var x = _netPeers[index];
                 
         if(x.isOnLine == v) return;
