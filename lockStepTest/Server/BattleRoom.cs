@@ -43,7 +43,7 @@ public class ServerBattleRoom
 
     public bool IsBattleStart {get; private set;}
     public int Master => _netPeers[0].id;
-    public List<int> AllPeers => _netPeers.Select(m=>m.id).ToList();
+    public IEnumerable<int> AllPeers => _netPeers.Select(m=>m.id);
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
@@ -354,5 +354,10 @@ public class ServerBattleRoom
                 return;
             }
         }
+    }
+
+    internal void UserReloadServerOKMsgProcess(int peer)
+    {
+        _socket.SendMessage(AllPeers, new UserReloadServerOKMsg(){userId = peer});
     }
 }

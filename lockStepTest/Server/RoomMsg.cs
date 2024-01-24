@@ -653,6 +653,21 @@ public struct GetUserJoinInfoResponse : INetSerializable
     }
 }
 
+public struct UserReloadServerOKMsg : INetSerializable
+{
+    public int userId;
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.UserReloadServerOK);
+        writer.Put(userId);
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        userId = reader.GetInt();
+    }
+}
 
 
 

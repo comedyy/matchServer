@@ -40,6 +40,7 @@ public enum MsgType1 : byte
     GetRoomStateResponse = 119,   // 获取房间状态，无连接
     GetUserInfo = 120, 
     GetUserInfoResponse = 120, 
+    UserReloadServerOK = 121, // 客户端恢复加载了。
 }
 
 [Serializable]
