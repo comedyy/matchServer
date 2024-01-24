@@ -228,6 +228,12 @@ public class NetProcessor
                 });
             }
         }
+        else
+        {
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){
+                roomError = RoomError.RoomNotExist
+            });
+        }
     }
 
     void CreateRoom(int peer, CreateRoomMsg msg)

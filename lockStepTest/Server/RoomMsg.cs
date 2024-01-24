@@ -404,6 +404,7 @@ public enum RoomError : byte
     BattleNotExit = 4,
     AuthError = 5,
     ChangeErrorOutOfIndex = 6,
+    RoomNotExist = 7,
 }
 
 public struct RoomErrorCode : INetSerializable
