@@ -247,7 +247,7 @@ public class NetProcessor
         }
 
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.roomType,  msg.roomLevel, msg.version, msg.startBattleMsg,  _serverSocket, msg.setting);
+        var room = new ServerBattleRoom(roomId, msg.roomType,  msg.roomLevel, msg.version, msg.startBattleMsg,  _serverSocket, msg.setting, msg.activityId);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){

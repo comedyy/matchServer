@@ -69,6 +69,7 @@ public struct CreateRoomMsg : INetSerializable
     public uint heroStar;
     public uint heroLevel;
     public string  version;
+    public int activityId;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -85,6 +86,7 @@ public struct CreateRoomMsg : INetSerializable
         roomLevel = reader.GetInt();
         setting = reader.Get<ServerSetting>();
         version = reader.GetString();
+        activityId = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -101,6 +103,7 @@ public struct CreateRoomMsg : INetSerializable
         writer.Put(roomLevel);
         writer.Put(setting);
         writer.Put(version);
+        writer.Put(activityId);
     }
 }
 
@@ -228,6 +231,7 @@ public struct UpdateRoomMemberList : INetSerializable
     public int roomType;
     public int roomLevel;
     public string version;
+    public int activityId;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -244,6 +248,7 @@ public struct UpdateRoomMemberList : INetSerializable
         roomType = reader.GetInt();
         roomLevel = reader.GetInt();
         version = reader.GetString();
+        activityId = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -262,6 +267,7 @@ public struct UpdateRoomMemberList : INetSerializable
         writer.Put(roomType);
         writer.Put(roomLevel);
         writer.Put(version);
+        writer.Put(activityId);
     }
 }
 
@@ -496,7 +502,7 @@ public struct GetUserStateMsg : INetSerializable
 {
     public enum UserState
     {
-        None, HasRoom, HasBattle
+        None, HasRoom, HasBattle, Querying,
     }
 
     public UserState state;

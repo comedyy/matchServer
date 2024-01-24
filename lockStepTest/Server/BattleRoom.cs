@@ -51,6 +51,7 @@ public class ServerBattleRoom
     private int _roomType;
     private int _roomLevel;
     private string _version;
+    private int _activityId;
 
     int MaxRoomUsers
     {
@@ -72,7 +73,7 @@ public class ServerBattleRoom
     }
 
 
-    public ServerBattleRoom(int id, int roomType, int roomLevel, string version, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
+    public ServerBattleRoom(int id, int roomType, int roomLevel, string version, byte[] startBattle, IServerGameSocket socket, ServerSetting setting, int activityId)
     {
         this._roomType = roomType;
         this._roomLevel = roomLevel;
@@ -81,6 +82,7 @@ public class ServerBattleRoom
         _startBattle = startBattle;
         _socket = socket;
         _setting = setting;
+        _activityId = activityId;
     }
 
     public bool AddPeer(int peer, byte[] joinMessage, string name, uint heroId, uint heroLevel, uint heroStar)
@@ -195,6 +197,7 @@ public class ServerBattleRoom
         roomType = _roomType,
         conditions = _setting.Conditions,
         version = _version,
+        activityId = _activityId,
         userList = _netPeers.Select(m=>new RoomUser(){name = m.name, HeroId = m.heroId, heroLevel = m.heroLevel, heroStar = m.heroStar,
              isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, }).ToArray()
     };
@@ -206,8 +209,8 @@ public class ServerBattleRoom
 
     internal void ForceClose(RoomOpt reason)
     {
-        _socket.SendMessage(_netPeers.Select(m=>m.id), new UpdateRoomMemberList());
         _socket.SendMessage(_netPeers.Select(m=>m.id), new SyncRoomOptMsg(){ state = reason, param = _netPeers[0].id});
+        _socket.SendMessage(_netPeers.Select(m=>m.id), new UpdateRoomMemberList());
 
         _netPeers.Clear();
     }
