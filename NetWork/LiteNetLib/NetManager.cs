@@ -636,6 +636,16 @@ namespace LiteNetLib
             }
         }
 
+        private string GetConnectionInfo()
+        {
+            // 输出连接信息。
+            _peersLock.EnterReadLock();
+            string result = $"peer count:{_peersDict.Count}个";
+            _peersLock.ExitReadLock();
+
+            return result;
+        }
+
         //Update function
         ProfilerTick _watch = new ProfilerTick("NetManager");
         private void UpdateLogic()
@@ -677,7 +687,7 @@ namespace LiteNetLib
 
                     ProcessNtpRequests(elapsed);
 
-                    _watch.AddTick((int)stopwatch.ElapsedMilliseconds);
+                    _watch.AddTick((int)stopwatch.ElapsedMilliseconds, GetConnectionInfo);
                     int sleepTime = UpdateTime - (int)stopwatch.ElapsedMilliseconds;
                     if (sleepTime > 0)
                         _updateTriggerEvent.WaitOne(sleepTime);

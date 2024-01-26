@@ -70,6 +70,10 @@ class Program
             {
                 mainThreadSleepTime = 10000;
             }
+            else if(line == "gc")
+            {
+                GC.Collect();
+            }
             else if(line == "help")
             {
                 Console.WriteLine(@"
@@ -77,7 +81,12 @@ class Program
                 reload: 加载配置
                 info:打开profiler
                 wait:暂停应用程序输入10秒,这个时候可以用于输入ssh输入。
+                gc: 内存回收
                 ");
+            }
+            else 
+            {
+                Console.WriteLine("invalid input【{line}】");
             }
         }
         catch(Exception e)

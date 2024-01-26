@@ -21,9 +21,9 @@ public class ProfilerTick
         _beginTime = (int)_watch.ElapsedMilliseconds;
     }
 
-    public void EndTick()
+    public void EndTick(Func<string> value = null)
     {
-        AddTick((int)_watch.ElapsedMilliseconds - _beginTime);
+        AddTick((int)_watch.ElapsedMilliseconds - _beginTime, value);
     }
 
     public void AddTick(int logicMs, Func<string> value = null)
