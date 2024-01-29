@@ -61,13 +61,9 @@ public struct CreateRoomMsg : INetSerializable
 {
     public byte[] startBattleMsg;
     public byte[] join;
-    public string name;
-    public int roomType;   // 房间类型
-    public int roomLevel;  // 房间等级
     public ServerSetting setting;
-    public string  version;
-    public int activityId;
     public byte[] joinShowInfo;
+    public byte[] joinRoomShowInfo;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -76,14 +72,10 @@ public struct CreateRoomMsg : INetSerializable
         startBattleMsg = reader.GetBytesWithLength();
         join = reader.GetBytesWithLength();
         
-        name = reader.GetString();
-        roomType = reader.GetInt();
-        roomLevel = reader.GetInt();
         setting = reader.Get<ServerSetting>();
-        version = reader.GetString();
-        activityId = reader.GetInt();
 
         joinShowInfo = reader.GetBytesWithLength();
+        joinRoomShowInfo = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -92,15 +84,10 @@ public struct CreateRoomMsg : INetSerializable
         writer.PutBytesWithLength(startBattleMsg);
         writer.PutBytesWithLength(join);
 
-        writer.Put(name);
-        writer.Put(roomType);
-        writer.Put(roomLevel);
         writer.Put(setting);
-        writer.Put(version);
-        writer.Put(activityId);
 
         writer.PutBytesWithLength(joinShowInfo);
-
+        writer.PutBytesWithLength(joinRoomShowInfo);
     }
 }
 
@@ -109,7 +96,6 @@ public struct JoinRoomMsg : INetSerializable
 {
     public int roomId;
     public byte[] joinMessage;
-    public string name;
     public byte[] joinShowInfo;
 
     public void Deserialize(NetDataReader reader)
@@ -117,7 +103,6 @@ public struct JoinRoomMsg : INetSerializable
         reader.GetByte();
         roomId = reader.GetInt();
         joinMessage = reader.GetBytesWithLength();
-        name = reader.GetString();
         joinShowInfo = reader.GetBytesWithLength();
     }
 
@@ -126,7 +111,6 @@ public struct JoinRoomMsg : INetSerializable
         writer.Put((byte)MsgType1.JoinRoom);
         writer.Put(roomId);
         writer.PutBytesWithLength(joinMessage);
-        writer.Put(name);
         writer.PutBytesWithLength(joinShowInfo);
     }
 }
@@ -180,7 +164,6 @@ public struct RoomStartBattleMsg : INetSerializable
 
 public partial struct RoomUser : INetSerializable
 {
-    public string name;
     public byte[] userInfo;
     public bool isOnLine;
     public bool isReady;
@@ -188,16 +171,18 @@ public partial struct RoomUser : INetSerializable
     
     public void Deserialize(NetDataReader reader)
     {
-        name = reader.GetString();
         isOnLine = reader.GetBool();
         isReady = reader.GetBool();
         userId = reader.GetUInt();
         userInfo = reader.GetBytesWithLength();
+
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
+        OnDeserialize();
+#endif
     }
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put(name);
         writer.Put(isOnLine);
         writer.Put(isReady);
         writer.Put(userId);
@@ -205,16 +190,12 @@ public partial struct RoomUser : INetSerializable
     }
 }
 
-public struct UpdateRoomMemberList : INetSerializable
+public partial struct UpdateRoomMemberList : INetSerializable
 {
     public RoomUser[] userList;
     public int roomId;
     public IntPair2[] conditions;
-    
-    public int roomType;
-    public int roomLevel;
-    public int activityId;
-    public string version;
+    public byte[] roomShowInfo;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -228,10 +209,11 @@ public struct UpdateRoomMemberList : INetSerializable
         }
 
         conditions = IntPair2.DeserializeArray(reader);
-        roomType = reader.GetInt();
-        roomLevel = reader.GetInt();
-        version = reader.GetString();
-        activityId = reader.GetInt();
+        roomShowInfo = reader.GetBytesWithLength();
+
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
+        OnDeserialize();
+#endif
     }
 
     public void Serialize(NetDataWriter writer)
@@ -247,10 +229,7 @@ public struct UpdateRoomMemberList : INetSerializable
         }
 
         IntPair2.SerializeArray(writer, conditions);
-        writer.Put(roomType);
-        writer.Put(roomLevel);
-        writer.Put(version);
-        writer.Put(activityId);
+        writer.PutBytesWithLength(roomShowInfo);
     }
 }
 

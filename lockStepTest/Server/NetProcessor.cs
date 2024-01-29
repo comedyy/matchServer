@@ -226,7 +226,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.joinShowInfo))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo))
             {
                 _allUserRooms[peer] = room;
             }
@@ -257,11 +257,11 @@ public class NetProcessor
         }
 
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.roomType,  msg.roomLevel, msg.version, msg.startBattleMsg,  _serverSocket, msg.setting, msg.activityId);
+        var room = new ServerBattleRoom(roomId, msg.joinRoomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
-            roomId = roomId, joinMessage = msg.join, name = msg.name, joinShowInfo = msg.joinShowInfo 
+            roomId = roomId, joinMessage = msg.join, joinShowInfo = msg.joinShowInfo 
         });
 
         Console.WriteLine($"CreateRoom:{roomId}");
@@ -309,7 +309,7 @@ public class NetProcessor
 
     void RemoveRoom(ServerBattleRoom room, RoomEndReason roomEndReason)
     {
-        var allPeers = room.AllPeers;
+        var allPeers = room.AllPeers.ToArray();
         room.ForceClose(roomEndReason == RoomEndReason.RoomMasterLeave ? SyncRoomOptMsg.RoomOpt.MasterLeaveRoomEnd : SyncRoomOptMsg.RoomOpt.RoomEnd);
         _allRooms.Remove(room.RoomId);
 
