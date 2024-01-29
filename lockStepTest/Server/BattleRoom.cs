@@ -150,15 +150,31 @@ public class ServerBattleRoom
     {
         if(_server == null) return;
 
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_BattleRoom.OnReceiveMsg");
+        #endif
+
         _server.AddMessage(peer, reader);
+
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.EndSample();
+        #endif
     }
 
     public void Update(float deltaTime, float roomTime)
     {
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_BattleRoom.Update");
+        #endif
+
         for(int i = 0; i < _speed; i++)
         {
             _server?.Update(deltaTime, roomTime);
-        }
+        }   
+
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.EndSample();
+        #endif
 
         if(_server != null && _server.IsBattleEnd)
         {

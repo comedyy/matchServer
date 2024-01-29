@@ -27,6 +27,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     {
         _dataWriter = new NetDataWriter();
         _netServer = new NetManager(this);
+        _netServer.AutoRecycle = true;
         _netServer.UnconnectedMessagesEnabled = true;
         _netServer.Start(_port);
         _netServer.UpdateTime = 15;
@@ -48,9 +49,35 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     
 #region IMessageSendReceive
     public Action<int, NetDataReader> OnReceiveMsg{get;set;}
+    
+    public void SendMessage<T>(List<int> list, T t) where T : INetSerializable
+    {
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_GameServerSocket.SendMessage");
+        #endif
+
+        _dataWriter.Reset();
+        _dataWriter.Put(t);
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            if(_lookupIdToPeer.TryGetValue(list[i], out var peer))
+            {
+                peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
+            }
+        }
+
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.EndSample();
+        #endif
+    }
 
     public void SendMessage<T>(IEnumerable<int> list, T t) where T : INetSerializable
     {
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_GameServerSocket.SendMessage");
+        #endif
+
         _dataWriter.Reset();
         _dataWriter.Put(t);
 
@@ -61,16 +88,28 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
                 peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
             }
         }
+
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.EndSample();
+        #endif
     }
 
     public void SendMessage<T>(int id, T t) where T : INetSerializable
     {
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_GameServerSocket.SendMessage");
+        #endif
+
         if(_lookupIdToPeer.TryGetValue(id, out var peer))
         {
             _dataWriter.Reset();
             _dataWriter.Put(t);
             peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
         }
+
+        #if UNITY_EDITOR
+        UnityEngine.Profiling.Profiler.EndSample();
+        #endif
     }
 #endregion
 

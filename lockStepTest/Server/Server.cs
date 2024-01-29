@@ -177,9 +177,18 @@ public class Server
         _frameMsgBuffer.AddFromReader(reader);
     }
 
+    int GetMaxReadyStageValue()
+    {
+        int max = -1;
+        for(int i = 0; i < _playerInfos.Length; i++)
+        {
+            max = Math.Max(max, _playerInfos[i].readyStageValue);
+        }
+        return max;
+    }
     private void UpdateReadyNextStageRoom()
     {
-        var maxReadyStageValue = _playerInfos.Max(m=>m.readyStageValue);
+        var maxReadyStageValue = GetMaxReadyStageValue();
         if(maxReadyStageValue <= _stageIndex) return;// 都在当前stage
 
         bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
@@ -205,9 +214,19 @@ public class Server
         }
     }
 
+    int GetMaxFinishedStageValue()
+    {
+        int max = -1;
+        for(int i = 0; i < _playerInfos.Length; i++)
+        {
+            max = Math.Max(max, _playerInfos[i].finishedStageValue);
+        }
+        return max;
+    }
+
     private void UpdateFinishRoom()
     {
-        var maxFinishedStageValue = _playerInfos.Max(m=>m.finishedStageValue);
+        var maxFinishedStageValue = GetMaxFinishedStageValue();
         if(maxFinishedStageValue < _stageIndex) return; // 都在当前stage
 
         bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
