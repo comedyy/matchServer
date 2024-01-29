@@ -226,7 +226,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.heroId, joinRoomMsg.heroLevel, joinRoomMsg.heroStar))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.name, joinRoomMsg.joinShowInfo))
             {
                 _allUserRooms[peer] = room;
             }
@@ -261,7 +261,7 @@ public class NetProcessor
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
-            roomId = roomId, joinMessage = msg.join, heroId = msg.heroId, name = msg.name, heroStar = msg.heroStar, heroLevel = msg.heroLevel
+            roomId = roomId, joinMessage = msg.join, name = msg.name, joinShowInfo = msg.joinShowInfo 
         });
 
         Console.WriteLine($"CreateRoom:{roomId}");

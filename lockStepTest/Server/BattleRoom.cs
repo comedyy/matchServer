@@ -12,22 +12,21 @@ public struct RoomMemberInfo
     public int id;
     public byte[] joinInfo;
     public string name;
-    public uint heroId;
     public bool isOnLine;
     public bool isReady;
     public float onlineStateChangeTime;
-    public uint heroLevel;
-    public uint heroStar;
+    public byte[] showInfo;
+    // public uint heroId;
+    // public uint heroLevel;
+    // public uint heroStar;
 
-    public RoomMemberInfo(int peer, byte[] joinMessage, string name,  uint heroId, uint heroLevel, uint heroStar) : this()
+    public RoomMemberInfo(int peer, byte[] joinMessage, string name,  byte[] showInfo) : this()
     {
         this.id = peer;
         this.joinInfo = joinMessage;
         this.name = name;
-        this.heroId = heroId;
         this.isOnLine = true;
-        this.heroLevel = heroLevel;
-        this.heroStar = heroStar;
+        this.showInfo = showInfo;
     }
 }
 
@@ -85,7 +84,7 @@ public class ServerBattleRoom
         _activityId = activityId;
     }
 
-    public bool AddPeer(int peer, byte[] joinMessage, string name, uint heroId, uint heroLevel, uint heroStar)
+    public bool AddPeer(int peer, byte[] joinMessage, string name, byte[] joinShowInfo)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var isNewUser = index < 0;
@@ -96,15 +95,13 @@ public class ServerBattleRoom
                 return false;
             }
 
-            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, name, heroId, heroLevel, heroStar));
+            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, name, joinShowInfo));
         }
         else    // 替换信息
         {
             var info = _netPeers[index];
-            info.heroId = heroId;
             info.joinInfo = joinMessage;
-            info.heroLevel = heroLevel;
-            info.heroStar = heroStar;
+            info.showInfo = joinShowInfo;
             _netPeers[index] = info;
         }
 
@@ -214,7 +211,7 @@ public class ServerBattleRoom
         conditions = _setting.Conditions,
         version = _version,
         activityId = _activityId,
-        userList = _netPeers.Select(m=>new RoomUser(){name = m.name, HeroId = m.heroId, heroLevel = m.heroLevel, heroStar = m.heroStar,
+        userList = _netPeers.Select(m=>new RoomUser(){name = m.name, userInfo = m.showInfo,
              isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, }).ToArray()
     };
 
