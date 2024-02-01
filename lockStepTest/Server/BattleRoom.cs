@@ -36,7 +36,7 @@ public class ServerBattleRoom
     IServerGameSocket _socket;
     private int _speed = 1;
 
-    public bool IsBattleStart {get; private set;}
+    public bool HasBattle {get; private set;}
     public int Master => _netPeers[0].id;
     public IEnumerable<int> AllPeers => _netPeers.Select(m=>m.id);
 
@@ -108,13 +108,14 @@ public class ServerBattleRoom
     {
         if(_netPeers.Count == 0) return;
         if(peer != Master) return;
+        if(_server != null) return;
 
         for(int i = 1; i < _netPeers.Count; i++)
         {
             if(!_netPeers[i].isReady) return;
         }
 
-        IsBattleStart = true;
+        HasBattle = true;
         _battleCount++;
 
         _server = new Server(_setting, _socket, AllPeers.ToList());
@@ -173,7 +174,7 @@ public class ServerBattleRoom
         Console.WriteLine($"battleEnd {RoomId}");
         _server?.Destroy();
         _server = null;
-        IsBattleStart = false;
+        HasBattle = false;
     }
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
@@ -325,7 +326,7 @@ public class ServerBattleRoom
         BroadcastRoomInfo();
     }
 
-    void Error(int peer, RoomError error)
+    public void Error(int peer, RoomError error)
     {
         _socket.SendMessage(peer, new RoomErrorCode(){
             roomError = error

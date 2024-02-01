@@ -116,7 +116,7 @@ public class NetProcessor
 
     private RoomListMsg GetRoomListMsg()
     {
-        var roomList = _allRooms.Values.Where(m=>!m.IsBattleStart).Select(m=>m.GetRoomInfoMsg());
+        var roomList = _allRooms.Values.Where(m=>!m.HasBattle).Select(m=>m.GetRoomInfoMsg());
 
         return new RoomListMsg(){
             roomList = roomList.ToArray()
@@ -128,7 +128,7 @@ public class NetProcessor
         GetUserStateMsg.UserState state = GetUserStateMsg.UserState.None;
         if(_allUserRooms.TryGetValue(peerId, out var room))
         {
-            state = room.IsBattleStart ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
+            state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
         }
 
         return new GetUserStateMsg(){ userId = peerId, state = state};
@@ -158,20 +158,26 @@ public class NetProcessor
     }
 
     
-    private void OnReconnect(int peer, bool reconnectBattle)
+    private void OnReconnect(int peer, TeamConnectParam teamParam)
     {
-        if(_allUserRooms.TryGetValue(peer, out var room))
-        {
-            room.SetUserOnLineState(peer, true, _serverTime);
+        if(teamParam == TeamConnectParam.None) return;
 
-            if(reconnectBattle)
-            {
-                room.SendReconnectBattleMsg(peer);
-            }
-        }
-        else
+        if(!_allUserRooms.TryGetValue(peer, out var room))
         {
-            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
+            room.Error(peer, RoomError.RoomNotExist);
+            return;
+        }
+
+        if(teamParam == TeamConnectParam.SyncRoomInfo && room.HasBattle)
+        {
+            room.Error(peer, RoomError.EnterRoomButBattleExist);
+            return;
+        }
+
+        room.SetUserOnLineState(peer, true, _serverTime);
+        if(teamParam == TeamConnectParam.GetBattleMsg)
+        {
+            room.SendReconnectBattleMsg(peer);
         }
     }
 

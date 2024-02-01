@@ -18,7 +18,7 @@ public interface IServerGameSocket : ILifeCircle
     // void BroadCastBattleStart(BattleStartMessage msg);
     int Count{get;}
     Action<int> OnPeerDisconnect { get; set; }
-    Action<int, bool> OnPeerReconnected { get; set; }
+    Action<int, TeamConnectParam> OnPeerReconnected { get; set; }
     void SendMessage<T>(IEnumerable<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(List<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(int peers, T t) where T : INetSerializable;

@@ -1,6 +1,12 @@
 using System.Collections.Generic;
 using LiteNetLib.Utils;
 
+public enum TeamConnectParam
+{
+    None,
+    SyncRoomInfo,
+    GetBattleMsg,
+}
 
 public enum ServerSyncType
 {
@@ -373,6 +379,7 @@ public enum RoomError : byte
     AuthError = 5,
     ChangeErrorOutOfIndex = 6,
     RoomNotExist = 7,
+    EnterRoomButBattleExist = 8
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -395,20 +402,20 @@ public struct RoomErrorCode : INetSerializable
 public struct RoomUserIdMsg : INetSerializable
 {
     public int userId;
-    public bool reconnectBattle;
+    public TeamConnectParam connectParam;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
         userId = reader.GetInt();
-        reconnectBattle = reader.GetBool();
+        connectParam = (TeamConnectParam)reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.SetUserId);
         writer.Put(userId);
-        writer.Put(reconnectBattle);
+        writer.Put((byte)connectParam);
     }
 }
 
