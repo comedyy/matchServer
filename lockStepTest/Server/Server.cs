@@ -114,9 +114,6 @@ public class Server
         {
             ReadyStageMsg ready = reader.Get<ReadyStageMsg>();
             var readyStageValue = ready.stageIndex;
-            var id = ready.id;
-            _playerInfos[id].readyStageValue = readyStageValue;
-            _playerInfos[id].readyStageTime = _roomTime;
 
             if(readyStageValue <= _stageIndex)
             {
@@ -126,6 +123,16 @@ public class Server
                 return;
             }
 
+
+            var id = ready.id;
+            if(_playerInfos[id].readyStageValue == readyStageValue)   // 已经确认过了
+            {
+                return;
+            }
+
+            _playerInfos[id].readyStageValue = readyStageValue;
+            _playerInfos[id].readyStageTime = _roomTime;
+
             UpdateReadyNextStageRoom();
             
             return;
@@ -134,10 +141,6 @@ public class Server
         {
             FinishRoomMsg ready = reader.Get<FinishRoomMsg>();
             var finishedStageValue = ready.stageValue;
-            var id = ready.id;
-            _playerInfos[id].finishedStageValue = finishedStageValue;
-            _playerInfos[id].finishStageTime = _roomTime;
-
             if(finishedStageValue < _stageIndex)    // 断线情况
             {
                 _socket.SendMessage(peer, new ServerEnterLoading(){
@@ -145,6 +148,15 @@ public class Server
                 });
                 return;
             }
+
+            var id = ready.id;
+            if(_playerInfos[id].finishedStageValue == finishedStageValue)   // 已经确认过了
+            {
+                return;
+            }
+
+            _playerInfos[id].finishedStageValue = finishedStageValue;
+            _playerInfos[id].finishStageTime = _roomTime;
 
             UpdateFinishRoom();
             
