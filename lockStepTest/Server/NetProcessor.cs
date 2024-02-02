@@ -41,6 +41,7 @@ public class NetProcessor
         {
             case MsgType1.CreateRoom: CreateRoom(peer, reader.Get<CreateRoomMsg>()); break;
             case MsgType1.JoinRoom: JoinRoom(peer, reader.Get<JoinRoomMsg>()); break;
+            case MsgType1.UpdateMemberInfo: UpdateMemberInfo(peer, reader.Get<UpdateMemberInfoMsg>()); break;
             case MsgType1.KickUser: KickUser(peer, reader.Get<KickUserMsg>()); break;
             case MsgType1.LeaveUser: LeaveUser(peer); break;
             case MsgType1.RoomReady: SetIsReady(peer, reader.Get<RoomReadyMsg>()); break;
@@ -62,7 +63,20 @@ public class NetProcessor
         }
     }
 
-    
+    private void UpdateMemberInfo(int peer, UpdateMemberInfoMsg updateMemberInfoMsg)
+    {
+        if(_allUserRooms.TryGetValue(peer, out var room1))  // 已经有房间
+        {
+            room1.UpdateInfo(peer, updateMemberInfoMsg.joinMessage, updateMemberInfoMsg.joinShowInfo);
+        }
+        else
+        {
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){
+                roomError = RoomError.RoomNotExist
+            });
+        }
+    }
+
     private void UserReloadServerOKMsgProcess(int peer)
     {
         if(_allUserRooms.TryGetValue(peer, out var room))
@@ -137,7 +151,7 @@ public class NetProcessor
     
     private GetRoomStateResponse GetRoomState(int roomId)
     {
-        if(_allRooms.TryGetValue(roomId, out var room))
+        if(_allRooms.TryGetValue(roomId, out var room) && !room.HasBattle)
         {
             return new GetRoomStateResponse(){
                 roomId = roomId, infoMsg = room.GetRoomInfoMsg()
@@ -164,7 +178,7 @@ public class NetProcessor
 
         if(!_allUserRooms.TryGetValue(peer, out var room))
         {
-            room.Error(peer, RoomError.RoomNotExist);
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){roomError = RoomError.RoomNotExist});
             return;
         }
 
@@ -224,10 +238,12 @@ public class NetProcessor
             {
                 if(room1 != room)
                 {
-                    // send error
-                    _serverSocket.SendMessage(peer, new RoomErrorCode(){
-                        roomError = RoomError.JoinRoomErrorHasRoom
-                    });
+                    room.Error(peer, RoomError.JoinRoomErrorHasRoom);
+                    return;
+                }
+                else
+                {
+                    room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
                     return;
                 }
             }
@@ -235,13 +251,6 @@ public class NetProcessor
             if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo))
             {
                 _allUserRooms[peer] = room;
-            }
-            else
-            {
-                // send error
-                _serverSocket.SendMessage(peer, new RoomErrorCode(){
-                    roomError = RoomError.RoomFull
-                });
             }
         }
         else

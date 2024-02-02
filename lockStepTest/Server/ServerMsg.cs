@@ -41,6 +41,7 @@ public enum MsgType1 : byte
     GetUserInfo = 120, 
     GetUserInfoResponse = 120, 
     UserReloadServerOK = 121, // 客户端恢复加载了。
+    UpdateMemberInfo = 122,
 }
 
 [Serializable]

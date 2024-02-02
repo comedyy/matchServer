@@ -121,6 +121,27 @@ public struct JoinRoomMsg : INetSerializable
     }
 }
 
+
+public struct UpdateMemberInfoMsg : INetSerializable
+{
+    public byte[] joinMessage;
+    public byte[] joinShowInfo;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        joinMessage = reader.GetBytesWithLength();
+        joinShowInfo = reader.GetBytesWithLength();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.UpdateMemberInfo);
+        writer.PutBytesWithLength(joinMessage);
+        writer.PutBytesWithLength(joinShowInfo);
+    }
+}
+
 public struct StartBattleRequest : INetSerializable
 {
     public void Deserialize(NetDataReader reader)
@@ -379,7 +400,10 @@ public enum RoomError : byte
     AuthError = 5,
     ChangeErrorOutOfIndex = 6,
     RoomNotExist = 7,
-    EnterRoomButBattleExist = 8
+    EnterRoomButBattleExist = 8,
+    LeaveErrorInBattle = 9,
+    JoinRoomErrorInsideRoom = 10,
+    UpdatFailedMemberNotExist = 11,
 }
 
 public struct RoomErrorCode : INetSerializable

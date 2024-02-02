@@ -81,27 +81,39 @@ public class ServerBattleRoom
         {
             if(_netPeers.Count >= MaxRoomUsers) // 房间人数FUll
             {
+                Error(peer, RoomError.RoomFull);
                 return false;
             }
 
             _netPeers.Add(new RoomMemberInfo(peer, joinMessage, joinShowInfo));
         }
-        else    // 替换信息
+        else
+        {
+            Error(peer, RoomError.JoinRoomErrorInsideRoom);
+            return false;
+        }
+
+        BroadcastRoomInfo();
+        _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
+
+        return true;
+    }
+
+    public void UpdateInfo(int peer, byte[] joinMessage, byte[] joinShowInfo)
+    {
+        var index = _netPeers.FindIndex(m=>m.id == peer);
+        if(index >= 0)
         {
             var info = _netPeers[index];
             info.joinInfo = joinMessage;
             info.showInfo = joinShowInfo;
             _netPeers[index] = info;
+            BroadcastRoomInfo();
         }
-
-        BroadcastRoomInfo();
-
-        if(isNewUser)
+        else
         {
-            _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
+            Error(peer, RoomError.UpdatFailedMemberNotExist);
         }
-
-        return true;
     }
 
     public void StartBattle(int peer)
@@ -181,6 +193,12 @@ public class ServerBattleRoom
 
     internal void RemovePeer(int peer, RoomOpt opt)
     {
+        if(_server != null)
+        {
+            Error(peer, RoomError.LeaveErrorInBattle);
+            return;
+        }
+
         _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = opt, param = peer});
         _netPeers.RemoveAll(m=> m.id == peer);
 
