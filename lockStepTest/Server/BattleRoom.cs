@@ -15,6 +15,7 @@ public struct RoomMemberInfo
     public bool isReady;
     public float onlineStateChangeTime;
     public byte[] showInfo;
+    public bool isInNeedAiState;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo) : this()
     {
@@ -22,6 +23,7 @@ public struct RoomMemberInfo
         this.joinInfo = joinMessage;
         this.isOnLine = true;
         this.showInfo = showInfo;
+        this.isInNeedAiState = false;
     }
 }
 
@@ -43,6 +45,7 @@ public class ServerBattleRoom
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
     int _battleCount = 0;
+    int _aiHelperIndex = -1;
 
     int MaxRoomUsers
     {
@@ -191,18 +194,19 @@ public class ServerBattleRoom
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
 
-    internal void RemovePeer(int peer, RoomOpt opt)
+    internal bool RemovePeer(int peer, RoomOpt opt)
     {
         if(_server != null)
         {
             Error(peer, RoomError.LeaveErrorInBattle);
-            return;
+            return false;
         }
 
         _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = opt, param = peer});
         _netPeers.RemoveAll(m=> m.id == peer);
 
         BroadcastRoomInfo();
+        return true;
     }
 
     void BroadcastRoomInfo()
@@ -216,8 +220,9 @@ public class ServerBattleRoom
         roomId = RoomId,
         conditions = _setting.Conditions,
         roomShowInfo = roomShowInfo,
+        AIHelperIndex = (byte)_netPeers.FindIndex(m=>!m.isInNeedAiState),
         userList = _netPeers.Select(m=>new RoomUser(){userInfo = m.showInfo,
-             isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, }).ToArray()
+             isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, needAiHelp = m.isInNeedAiState }).ToArray()
     };
 
     internal void SetRoomSpeed(int peer, int speed)
@@ -248,6 +253,12 @@ public class ServerBattleRoom
         x.isOnLine = v;
         x.onlineStateChangeTime = _serverTime;
         _netPeers[index] = x;
+
+        if(_server == null || !v)
+        {
+            var need = !v;
+            OnUpdateAiHelper(peer, need);
+        }
 
         // sync room list
         BroadcastRoomInfo();
@@ -381,6 +392,24 @@ public class ServerBattleRoom
 
     internal void UserReloadServerOKMsgProcess(int peer)
     {
-        _socket.SendMessage(AllPeers, new UserReloadServerOKMsg(){userId = peer});
+        if(_server == null)
+        {
+            return;
+        }
+
+        OnUpdateAiHelper(peer, false);
+        BroadcastRoomInfo();
+    }
+
+    void OnUpdateAiHelper(int peer, bool need)
+    {
+        var index = _netPeers.FindIndex(m=>m.id == peer);
+        if(index < 0) return;  // not found
+
+        var x = _netPeers[index];
+        if(x.isInNeedAiState == need) return; // 状态未改变
+
+        x.isInNeedAiState = need;
+        _netPeers[index] = x;
     }
 }

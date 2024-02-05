@@ -4,8 +4,7 @@ using LiteNetLib.Utils;
 public enum TeamConnectParam
 {
     None,
-    SyncRoomInfo,
-    GetBattleMsg,
+    SyncInfo,
 }
 
 public enum ServerSyncType
@@ -195,6 +194,7 @@ public partial struct RoomUser : INetSerializable
     public bool isOnLine;
     public bool isReady;
     public uint userId;
+    public bool needAiHelp;
     
     public void Deserialize(NetDataReader reader)
     {
@@ -202,6 +202,7 @@ public partial struct RoomUser : INetSerializable
         isReady = reader.GetBool();
         userId = reader.GetUInt();
         userInfo = reader.GetBytesWithLength();
+        needAiHelp = reader.GetBool();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
         OnDeserialize();
@@ -214,6 +215,7 @@ public partial struct RoomUser : INetSerializable
         writer.Put(isReady);
         writer.Put(userId);
         writer.PutBytesWithLength(userInfo);
+        writer.Put(needAiHelp);
     }
 }
 
@@ -223,6 +225,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
     public int roomId;
     public IntPair2[] conditions;
     public byte[] roomShowInfo;
+    public byte AIHelperIndex;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -237,6 +240,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
 
         conditions = IntPair2.DeserializeArray(reader);
         roomShowInfo = reader.GetBytesWithLength();
+        AIHelperIndex = reader.GetByte();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
         OnDeserialize();
@@ -257,6 +261,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
 
         IntPair2.SerializeArray(writer, conditions);
         writer.PutBytesWithLength(roomShowInfo);
+        writer.Put(AIHelperIndex);
     }
 }
 
@@ -661,6 +666,27 @@ public struct UserReloadServerOKMsg : INetSerializable
         userId = reader.GetInt();
     }
 }
+
+public struct SyncUpdateAiHelperMsg : INetSerializable
+{
+    public byte HolderIndex;
+    public byte[] NeedHelpList;
+
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.SyncUpdateAiHelper);
+        writer.Put(HolderIndex);
+        writer.PutBytesWithLength(NeedHelpList);
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        HolderIndex = reader.GetByte();
+        NeedHelpList = reader.GetBytesWithLength();
+    }
+}
+
 
 
 

@@ -182,14 +182,8 @@ public class NetProcessor
             return;
         }
 
-        if(teamParam == TeamConnectParam.SyncRoomInfo && room.HasBattle)
-        {
-            room.Error(peer, RoomError.EnterRoomButBattleExist);
-            return;
-        }
-
         room.SetUserOnLineState(peer, true, _serverTime);
-        if(teamParam == TeamConnectParam.GetBattleMsg)
+        if(teamParam == TeamConnectParam.SyncInfo)
         {
             room.SendReconnectBattleMsg(peer);
         }
@@ -224,8 +218,10 @@ public class NetProcessor
             }
             else
             {
-                room.RemovePeer(peer, SyncRoomOptMsg.RoomOpt.Leave);
-                _allUserRooms.Remove(peer);
+                if(room.RemovePeer(peer, SyncRoomOptMsg.RoomOpt.Leave))
+                {
+                    _allUserRooms.Remove(peer);
+                }
             }
         }
     }

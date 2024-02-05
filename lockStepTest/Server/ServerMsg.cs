@@ -16,7 +16,6 @@ public enum MsgType1 : byte
     ServerEnterLoading = 10,  // 完成当前的stage小关, 服务器回包
     Unsync = 11,
     ServerReConnect = 12,
-    BattleFailed = 13,
     ServerMsgEnd___ = 100, // 服务器消息最后
 
     CreateRoom = 101,
@@ -42,6 +41,7 @@ public enum MsgType1 : byte
     GetUserInfoResponse = 120, 
     UserReloadServerOK = 121, // 客户端恢复加载了。
     UpdateMemberInfo = 122,
+    SyncUpdateAiHelper = 123,     // 房间ai托管同步
 }
 
 [Serializable]

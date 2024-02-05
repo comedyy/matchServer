@@ -173,6 +173,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         if(_lookupPeerToId.TryGetValue(peer, out var id))
         {
             _lookupIdToPeer.Remove(id);
+            _lookupPeerToId.Remove(peer);
             OnPeerDisconnect?.Invoke(id);
         }
     }
@@ -217,7 +218,8 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 
     #endregion
 
-    public int Count => _lookupPeerToId.Count;
+    public int PeerCount => _lookupPeerToId.Count;
+    public int UserCount => _lookupPeerToId.Count;
 
     public Action<int> OnPeerDisconnect{get;set;}
     public Action<int, TeamConnectParam> OnPeerReconnected{get;set;}
