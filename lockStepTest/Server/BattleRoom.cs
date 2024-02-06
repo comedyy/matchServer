@@ -232,6 +232,8 @@ public class ServerBattleRoom
 
     internal void ForceClose(RoomOpt reason)
     {
+        if(_netPeers.Count == 0) return;
+
         _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = reason, param = _netPeers[0].id});
         _socket.SendMessage(AllPeers, new UpdateRoomMemberList());
 
@@ -317,7 +319,6 @@ public class ServerBattleRoom
     {
         if(_server == null)
         {
-            Error(peer, RoomError.BattleNotExit);
             return;
         }
 

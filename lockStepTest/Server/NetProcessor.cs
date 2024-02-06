@@ -183,10 +183,7 @@ public class NetProcessor
         }
 
         room.SetUserOnLineState(peer, true, _serverTime);
-        if(teamParam == TeamConnectParam.SyncInfo)
-        {
-            room.SendReconnectBattleMsg(peer);
-        }
+        room.SendReconnectBattleMsg(peer);
     }
 
 
@@ -268,7 +265,7 @@ public class NetProcessor
         }
 
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.joinRoomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){

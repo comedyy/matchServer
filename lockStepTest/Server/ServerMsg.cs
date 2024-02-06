@@ -243,41 +243,34 @@ public struct FrameHash : INetSerializable
 public struct FinishRoomMsg : INetSerializable
 {
     public int stageValue;
-    internal int id;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.FinishCurrentStage);
         writer.Put(stageValue);
-        writer.Put(id);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         stageValue = reader.GetInt();
-        id = reader.GetInt();
     }
 }
-
 
 public struct ReadyStageMsg : INetSerializable
 {
     public int stageIndex;
-    internal int id;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ReadyForNextStage);
         writer.Put(stageIndex);
-        writer.Put(id);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         stageIndex = reader.GetInt();
-        id = reader.GetInt();
     }
 }
 

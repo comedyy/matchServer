@@ -68,7 +68,7 @@ public struct CreateRoomMsg : INetSerializable
     public byte[] join;
     public ServerSetting setting;
     public byte[] joinShowInfo;
-    public byte[] joinRoomShowInfo;
+    public byte[] roomShowInfo;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -80,7 +80,7 @@ public struct CreateRoomMsg : INetSerializable
         setting = reader.Get<ServerSetting>();
 
         joinShowInfo = reader.GetBytesWithLength();
-        joinRoomShowInfo = reader.GetBytesWithLength();
+        roomShowInfo = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -92,7 +92,7 @@ public struct CreateRoomMsg : INetSerializable
         writer.Put(setting);
 
         writer.PutBytesWithLength(joinShowInfo);
-        writer.PutBytesWithLength(joinRoomShowInfo);
+        writer.PutBytesWithLength(roomShowInfo);
     }
 }
 
