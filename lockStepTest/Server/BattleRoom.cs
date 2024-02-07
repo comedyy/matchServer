@@ -312,6 +312,12 @@ public class ServerBattleRoom
             return RoomEndReason.BattleEnd;
         }
 
+        // 玩家暂停太久，100秒。
+        if(_server != null && _server._pauseFrame != int.MaxValue && (serverTime - _server.UserPauseTime) > 100)
+        {
+            return RoomEndReason.UserPauseTooLongException;
+        }
+
         return RoomEndReason.None;
     }
 

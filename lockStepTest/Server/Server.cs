@@ -32,7 +32,8 @@ public class Server
     IServerGameSocket _socket;
     private List<int> _netPeers;
     HashChecker _hashChecker;
-    int _pauseFrame = -1;
+    public int _pauseFrame = -1;
+    public float UserPauseTime{get; private set;}
     
     GameState _gameState = GameState.NotBegin;
     private int _stageIndex;
@@ -178,6 +179,7 @@ public class Server
             if(pause.pause)
             {
                 _pauseFrame = _frame + 1;
+                UserPauseTime = _roomTime;
             }
             else
             {
