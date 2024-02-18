@@ -383,20 +383,6 @@ public class ServerBattleRoom
         _socket.SendMessage(AllPeers, roomSyncLoadingProcessMsg);
     }
 
-    internal void GetUserJoinInfoResponse(int peer, int userId)
-    {
-        foreach(var x in _netPeers)
-        {
-            if(x.id == userId)
-            {
-                _socket.SendMessage(peer, new GetUserJoinInfoResponse(){
-                    join = x.joinInfo
-                });
-                return;
-            }
-        }
-    }
-
     internal void UserReloadServerOKMsgProcess(int peer)
     {
         if(_server == null)

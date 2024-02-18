@@ -21,7 +21,10 @@ class Program
         // NetMgr.Instance.Init();
 
         ThreadStart threadStart = ProcessLogic;
-        _thread = new Thread(threadStart);
+        _thread = new Thread(threadStart)
+        {
+            Name = "____ROOM_PROCESS"
+        };
         _thread.Start();
 
         Console.WriteLine(" ---------------server start------------------ ");

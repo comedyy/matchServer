@@ -37,8 +37,8 @@ public enum MsgType1 : byte
     RoomSyncLoadingProcess = 118,
     GetRoomState = 119,   // 获取房间状态，无连接
     GetRoomStateResponse = 119,   // 获取房间状态，无连接
-    GetUserInfo = 120, 
-    GetUserInfoResponse = 120, 
+    // GetUserJoinInfo = 120, 
+    // GetUserInfoResponse = 120, 
     UserReloadServerOK = 121, // 客户端恢复加载了。
     UpdateMemberInfo = 122,
     SyncUpdateAiHelper = 123,     // 房间ai托管同步

@@ -618,75 +618,15 @@ public struct GetRoomStateResponse : INetSerializable
     }
 }
 
-public struct GetUserJoinInfoMsg : INetSerializable
-{
-    public int userId;
-    void INetSerializable.Serialize(NetDataWriter writer)
-    {
-        writer.Put((byte)MsgType1.GetUserInfo);
-        writer.Put(userId);
-    }
-
-    void INetSerializable.Deserialize(NetDataReader reader)
-    {
-        var msgType = reader.GetByte();
-        userId = reader.GetInt();
-    }
-}
-
-public struct GetUserJoinInfoResponse : INetSerializable
-{
-    public byte[] join;
-
-    void INetSerializable.Serialize(NetDataWriter writer)
-    {
-        writer.Put((byte)MsgType1.GetUserInfoResponse);
-        writer.PutBytesWithLength(join);
-    }
-
-    void INetSerializable.Deserialize(NetDataReader reader)
-    {
-        var msgType = reader.GetByte();
-        join = reader.GetBytesWithLength();
-    }
-}
-
 public struct UserReloadServerOKMsg : INetSerializable
 {
-    public int userId;
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.UserReloadServerOK);
-        writer.Put(userId);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        userId = reader.GetInt();
     }
 }
-
-public struct SyncUpdateAiHelperMsg : INetSerializable
-{
-    public byte HolderIndex;
-    public byte[] NeedHelpList;
-
-    void INetSerializable.Serialize(NetDataWriter writer)
-    {
-        writer.Put((byte)MsgType1.SyncUpdateAiHelper);
-        writer.Put(HolderIndex);
-        writer.PutBytesWithLength(NeedHelpList);
-    }
-
-    void INetSerializable.Deserialize(NetDataReader reader)
-    {
-        var msgType = reader.GetByte();
-        HolderIndex = reader.GetByte();
-        NeedHelpList = reader.GetBytesWithLength();
-    }
-}
-
-
-
-
