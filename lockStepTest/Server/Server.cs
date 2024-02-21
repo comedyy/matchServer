@@ -18,6 +18,7 @@ struct PlayerInfo
 
     public int readyStageValue;
     public float readyStageTime;
+    public bool isOnLine;
 }
 
 public class Server
@@ -209,6 +210,7 @@ public class Server
         if(maxReadyStageValue <= _stageIndex) return;// 都在当前stage
 
         bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
+        var minReadyStageValue = maxReadyStageValue;
         for(int i = 0; i < _playerInfos.Length; i++)
         {
             if(_playerInfos[i].readyStageValue == maxReadyStageValue)
@@ -217,9 +219,12 @@ public class Server
                 var isOK = diff > _waitReadyStageTime;
                 timeout |= isOK;
             }
+
+            var stageValue = _playerInfos[i].isOnLine ? _playerInfos[i].readyStageValue : maxReadyStageValue;
+            minReadyStageValue = Math.Min(stageValue, minReadyStageValue);
         }
 
-        var condition = timeout || _playerInfos.Min(m=>m.readyStageValue) == maxReadyStageValue;
+        var condition = timeout || minReadyStageValue == maxReadyStageValue;
         if(condition)
         {
             _stageIndex = maxReadyStageValue;
@@ -305,6 +310,11 @@ public class Server
 
     public void Destroy()
     {
+    }
+
+    internal void SetOnlineState(int i, bool isOnLine)
+    {
+        _playerInfos[i].isOnLine = isOnLine;
     }
 
     public bool IsBattleEnd => _gameState == GameState.End;

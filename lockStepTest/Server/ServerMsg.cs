@@ -41,7 +41,8 @@ public enum MsgType1 : byte
     // GetUserInfoResponse = 120, 
     UserReloadServerOK = 121, // 客户端恢复加载了。
     UpdateMemberInfo = 122,
-    SyncUpdateAiHelper = 123,     // 房间ai托管同步
+    CreateAutoJoinRobert = 123,     // 创建机器人，加入队伍
+    CreateAutoCreateRoomRobert = 124,     // 创建机器人去创建房间
 }
 
 [Serializable]

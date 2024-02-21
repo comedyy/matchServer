@@ -41,7 +41,9 @@ public class NetProcessor
         switch(msgType)
         {
             case MsgType1.CreateRoom: CreateRoom(peer, reader.Get<CreateRoomMsg>()); break;
+            case MsgType1.CreateAutoCreateRoomRobert: CreateRobertRoom(peer, reader.Get<CreateAutoCreateRoomRobertMsg>()); break;
             case MsgType1.JoinRoom: JoinRoom(peer, reader.Get<JoinRoomMsg>()); break;
+            case MsgType1.CreateAutoJoinRobert: JoinRobert(reader.Get<CreateAutoJoinRobertMsg>()); break;
             case MsgType1.UpdateMemberInfo: UpdateMemberInfo(peer, reader.Get<UpdateMemberInfoMsg>()); break;
             case MsgType1.KickUser: KickUser(peer, reader.Get<KickUserMsg>()); break;
             case MsgType1.LeaveUser: LeaveUser(peer); break;
@@ -170,7 +172,7 @@ public class NetProcessor
 
         if(!_allUserRooms.TryGetValue(peer, out var room))
         {
-            _serverSocket.SendMessage(peer, new RoomErrorCode(){roomError = RoomError.RoomNotExist});
+            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
             return;
         }
 
@@ -215,8 +217,47 @@ public class NetProcessor
         }
     }
 
+    private void JoinRobert(CreateAutoJoinRobertMsg createAutoJoinRobertMsg)
+    {
+        if(createAutoJoinRobertMsg.joinRoomMsg.msgVersion != RoomMsgVersion.version)
+        {
+            return;
+        }
+
+        int idRobert = createAutoJoinRobertMsg.idRobert;
+        if(idRobert == 0) return;
+        if(_allUserRooms.ContainsKey(idRobert))  // 已经有房间
+        {
+            return;
+        }
+
+        if(_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
+        {
+            if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, true))
+            {
+                _allUserRooms[idRobert] = room;
+                room.SetUserOnLineState(idRobert, false, _serverTime);
+
+                if(room.Master != idRobert)
+                {
+                    room.SetIsReady(idRobert, true);
+                }
+
+                Console.WriteLine($"Join robert {idRobert}");
+            }
+        }
+    }
+
     private void JoinRoom(int peer, JoinRoomMsg joinRoomMsg)
     {
+        if(joinRoomMsg.msgVersion != RoomMsgVersion.version)
+        {
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){
+                roomError = RoomError.MsgVersionError
+            });
+            return;
+        }
+
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
             if(_allUserRooms.TryGetValue(peer, out var room1))  // 已经有房间
@@ -233,7 +274,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, false))
             {
                 _allUserRooms[peer] = room;
             }
@@ -246,6 +287,35 @@ public class NetProcessor
         }
     }
 
+    private void CreateRobertRoom(int peer, CreateAutoCreateRoomRobertMsg createAutoCreateRoomRobertMsg)
+    {
+        var robertId = createAutoCreateRoomRobertMsg.idRobert;
+        if(_allUserRooms.ContainsKey(robertId))
+        {
+            return;
+        }
+
+        var msg = createAutoCreateRoomRobertMsg.createRoomMsg;
+        if(msg.msgVersion != RoomMsgVersion.version)
+        {
+            return;
+        }
+
+        var roomId = ++RoomId;
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
+        _allRooms.Add(roomId, room);
+
+        JoinRobert(new CreateAutoJoinRobertMsg(){
+            joinRoomMsg = new JoinRoomMsg(){
+                roomId = roomId, joinMessage = msg.join, joinShowInfo = msg.joinShowInfo, msgVersion = msg.msgVersion
+            }, 
+            idRobert = createAutoCreateRoomRobertMsg.idRobert}
+        );
+
+        Console.WriteLine($"CreateRobertRoom:{roomId}");
+    }
+
+
     void CreateRoom(int peer, CreateRoomMsg msg)
     {
         if(_allUserRooms.ContainsKey(peer))
@@ -256,12 +326,20 @@ public class NetProcessor
             return;
         }
 
+        if(msg.msgVersion != RoomMsgVersion.version)
+        {
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){
+                roomError = RoomError.MsgVersionError
+            });
+            return;
+        }
+
         var roomId = ++RoomId;
         var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
-            roomId = roomId, joinMessage = msg.join, joinShowInfo = msg.joinShowInfo 
+            roomId = roomId, joinMessage = msg.join, joinShowInfo = msg.joinShowInfo, msgVersion = msg.msgVersion
         });
 
         Console.WriteLine($"CreateRoom:{roomId}");

@@ -1,6 +1,11 @@
 using System.Collections.Generic;
 using LiteNetLib.Utils;
 
+public class RoomMsgVersion
+{
+    public const int version = 1;
+}
+
 public enum TeamConnectParam
 {
     None,
@@ -69,11 +74,13 @@ public struct CreateRoomMsg : INetSerializable
     public ServerSetting setting;
     public byte[] joinShowInfo;
     public byte[] roomShowInfo;
+    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte(); // msgHeader
 
+        msgVersion = reader.GetUShort();
         startBattleMsg = reader.GetBytesWithLength();
         join = reader.GetBytesWithLength();
         
@@ -86,6 +93,7 @@ public struct CreateRoomMsg : INetSerializable
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.CreateRoom);
+        writer.Put(msgVersion);
         writer.PutBytesWithLength(startBattleMsg);
         writer.PutBytesWithLength(join);
 
@@ -102,10 +110,12 @@ public struct JoinRoomMsg : INetSerializable
     public int roomId;
     public byte[] joinMessage;
     public byte[] joinShowInfo;
+    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
+        msgVersion = reader.GetUShort();
         roomId = reader.GetInt();
         joinMessage = reader.GetBytesWithLength();
         joinShowInfo = reader.GetBytesWithLength();
@@ -114,6 +124,7 @@ public struct JoinRoomMsg : INetSerializable
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.JoinRoom);
+        writer.Put(msgVersion);
         writer.Put(roomId);
         writer.PutBytesWithLength(joinMessage);
         writer.PutBytesWithLength(joinShowInfo);
@@ -409,6 +420,7 @@ public enum RoomError : byte
     LeaveErrorInBattle = 9,
     JoinRoomErrorInsideRoom = 10,
     UpdatFailedMemberNotExist = 11,
+    MsgVersionError = 12,
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -630,3 +642,42 @@ public struct UserReloadServerOKMsg : INetSerializable
         var msgType = reader.GetByte();
     }
 }
+
+public struct CreateAutoJoinRobertMsg : INetSerializable
+{
+    public JoinRoomMsg joinRoomMsg;
+    internal int idRobert;
+    public void Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        joinRoomMsg = reader.Get<JoinRoomMsg>();
+        idRobert = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.CreateAutoJoinRobert);
+        writer.Put(joinRoomMsg);
+        writer.Put(idRobert);
+    }
+}
+
+public struct CreateAutoCreateRoomRobertMsg : INetSerializable
+{
+    public CreateRoomMsg createRoomMsg;
+    internal int idRobert;
+    public void Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        createRoomMsg = reader.Get<CreateRoomMsg>();
+        idRobert = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.CreateAutoCreateRoomRobert);
+        writer.Put(createRoomMsg);
+        writer.Put(idRobert);
+    }
+}
+

@@ -16,14 +16,16 @@ public struct RoomMemberInfo
     public float onlineStateChangeTime;
     public byte[] showInfo;
     public bool isInNeedAiState;
+    public bool isRobert; // 是否是机器人
 
-    public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo) : this()
+    public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, bool isRobert) : this()
     {
         this.id = peer;
         this.joinInfo = joinMessage;
         this.isOnLine = true;
         this.showInfo = showInfo;
         this.isInNeedAiState = false;
+        this.isRobert = isRobert;
     }
 }
 
@@ -76,7 +78,7 @@ public class ServerBattleRoom
         _setting = setting;
     }
 
-    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo)
+    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, bool isRobert)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var isNewUser = index < 0;
@@ -88,7 +90,7 @@ public class ServerBattleRoom
                 return false;
             }
 
-            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, joinShowInfo));
+            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, joinShowInfo, isRobert));
         }
         else
         {
@@ -146,6 +148,11 @@ public class ServerBattleRoom
         {
             SetIsReady(_netPeers[i].id, false);
         }
+
+        for(int i = 0; i < _netPeers.Count; i++)
+        {
+            _server.SetOnlineState(i, _netPeers[i].isOnLine);
+        }
     }
 
     public void OnReceiveMsg(int peer, NetDataReader reader)
@@ -181,6 +188,16 @@ public class ServerBattleRoom
         if(_server != null && _server.IsBattleEnd)
         {
             SwitchToRoomMode();
+        }
+
+        // robert master start Battle
+        if(_netPeers.Count > 0 && _netPeers[0].isRobert && _netPeers.Count > 1)
+        {
+            var hasUser = _netPeers.Any(m=>!m.isRobert);
+            if(hasUser)
+            {
+                StartBattle(_netPeers[0].id);
+            }
         }
     }
 
@@ -227,7 +244,7 @@ public class ServerBattleRoom
 
     internal void SetRoomSpeed(int peer, int speed)
     {
-        _speed = speed;
+        _speed = Math.Max(Math.Min(speed, 5), 1);
     }
 
     internal void ForceClose(RoomOpt reason)
@@ -256,10 +273,12 @@ public class ServerBattleRoom
         x.onlineStateChangeTime = _serverTime;
         _netPeers[index] = x;
 
-        if(_server == null || !v)
+        var need = !v;
+        OnUpdateAiHelper(peer, need);
+
+        if(_server != null)
         {
-            var need = !v;
-            OnUpdateAiHelper(peer, need);
+            _server.SetOnlineState(index, v);
         }
 
         // sync room list

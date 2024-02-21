@@ -16,9 +16,8 @@ class Program
 
     static void Main(string[] args)
     {
-        Init();
         CreaetAppConfigFolder();
-        // NetMgr.Instance.Init();
+        Init();
 
         ThreadStart threadStart = ProcessLogic;
         _thread = new Thread(threadStart)
@@ -161,6 +160,7 @@ class Program
         else
         {
             Console.WriteLine("未找到appConfig.txt");
+            File.WriteAllText(configPath, "port,5000");
         }
 
         int port;
