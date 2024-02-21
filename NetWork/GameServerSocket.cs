@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using LiteNetLib;
@@ -35,9 +36,34 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         Console.WriteLine($"start port:{_port}");
     }
 
-    public void Update()
+    float _timeAdd = 0;
+    public void Update(float deltaTime)
     {
         _netServer.PollEvents();
+
+        // 15秒清理一下无房间的socket
+        _timeAdd += deltaTime;
+        int _removedSocketCount = 0;
+        if(_timeAdd > 15)
+        {
+            _timeAdd = 0;
+            var list = _lookupIdToPeer.ToList();
+            foreach(var x in list)
+            {
+                var id = x.Key;
+                if(GetUserState(x.Key) == GetUserStateMsg.UserState.None)
+                {
+                    var peer = x.Value;
+                    peer.Disconnect();
+                    _removedSocketCount++;
+                }
+            }
+        }
+
+        if(_removedSocketCount > 0)
+        {
+            Console.WriteLine($"清理socket无用socket数量：{_removedSocketCount}");
+        }
     }
 
     public void OnDestroy()
@@ -145,9 +171,10 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         }
         else if(msgType == MsgType1.GetUserState && GetUserState != null)
         {
-            var msg = GetUserState(reader.Get<GetUserStateMsg>().userId);
+            var userId = reader.Get<GetUserStateMsg>().userId;
+            var state = GetUserState(userId);
             _dataWriter.Reset();
-            _dataWriter.Put(msg);
+            _dataWriter.Put(new GetUserStateMsg(){userId = userId, state = state});
             _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
         }
     }
@@ -224,7 +251,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public Action<int> OnPeerDisconnect{get;set;}
     public Action<int, TeamConnectParam> OnPeerReconnected{get;set;}
     public Func<RoomListMsg> GetAllRoomList{get;set;}
-    public Func<int, GetUserStateMsg> GetUserState{get;set;}
+    public Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
     public Func<int, GetRoomStateResponse> GetRoomState{get;set;}
 
     public void WriteNet(NetLogLevel level, string str, params object[] args)

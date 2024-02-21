@@ -24,14 +24,14 @@ public interface IServerGameSocket : ILifeCircle
     void SendMessage<T>(int peers, T t) where T : INetSerializable;
     Action<int, NetDataReader> OnReceiveMsg{get;set;}
     Func<RoomListMsg> GetAllRoomList{get;set;}
-    Func<int, GetUserStateMsg> GetUserState{get;set;}
+    Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
     Func<int, GetRoomStateResponse> GetRoomState{get;set;}
 }
 
 public interface ILifeCircle
 {
     void Start();
-    void Update();
+    void Update(float deltaTime);
     void OnDestroy();
 }
 

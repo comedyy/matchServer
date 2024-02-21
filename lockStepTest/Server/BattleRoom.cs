@@ -43,6 +43,7 @@ public class ServerBattleRoom
     public bool HasBattle {get; private set;}
     public int Master => _netPeers[0].id;
     public IEnumerable<int> AllPeers => _netPeers.Select(m=>m.id);
+    public IEnumerable<int> AllOnLinePeers => _netPeers.Where(m=>m.isOnLine).Select(m=>m.id);
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
@@ -99,7 +100,7 @@ public class ServerBattleRoom
         }
 
         BroadcastRoomInfo();
-        _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
+        _socket.SendMessage(AllOnLinePeers, new SyncRoomOptMsg(){ state = RoomOpt.Join, param = peer});
 
         return true;
     }
@@ -219,7 +220,7 @@ public class ServerBattleRoom
             return false;
         }
 
-        _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = opt, param = peer});
+        _socket.SendMessage(AllOnLinePeers, new SyncRoomOptMsg(){ state = opt, param = peer});
         _netPeers.RemoveAll(m=> m.id == peer);
 
         BroadcastRoomInfo();
@@ -230,7 +231,7 @@ public class ServerBattleRoom
     {
         if(_netPeers.Count == 0 ) return;
 
-        _socket.SendMessage(AllPeers, RoomInfo);
+        _socket.SendMessage(AllOnLinePeers, RoomInfo);
     }
 
     UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
@@ -251,8 +252,8 @@ public class ServerBattleRoom
     {
         if(_netPeers.Count == 0) return;
 
-        _socket.SendMessage(AllPeers, new SyncRoomOptMsg(){ state = reason, param = _netPeers[0].id});
-        _socket.SendMessage(AllPeers, new UpdateRoomMemberList());
+        _socket.SendMessage(AllOnLinePeers, new SyncRoomOptMsg(){ state = reason, param = _netPeers[0].id});
+        _socket.SendMessage(AllOnLinePeers, new UpdateRoomMemberList());
 
         _netPeers.Clear();
     }
@@ -399,7 +400,7 @@ public class ServerBattleRoom
     internal void UpdateLoadingProcess(int peer, RoomSyncLoadingProcessMsg roomSyncLoadingProcessMsg)
     {
         roomSyncLoadingProcessMsg.id = peer;
-        _socket.SendMessage(AllPeers, roomSyncLoadingProcessMsg);
+        _socket.SendMessage(AllOnLinePeers, roomSyncLoadingProcessMsg);
     }
 
     internal void UserReloadServerOKMsgProcess(int peer)

@@ -131,7 +131,7 @@ public class NetProcessor
         };
     }
 
-    private GetUserStateMsg GetUserState(int peerId)
+    private GetUserStateMsg.UserState GetUserState(int peerId)
     {
         GetUserStateMsg.UserState state = GetUserStateMsg.UserState.None;
         if(_allUserRooms.TryGetValue(peerId, out var room))
@@ -139,7 +139,7 @@ public class NetProcessor
             state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
         }
 
-        return new GetUserStateMsg(){ userId = peerId, state = state};
+        return state;
     }
 
     
@@ -201,7 +201,6 @@ public class NetProcessor
     {
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
-            room.SetUserOnLineState(peer, false, _serverTime);
             var master = room.Master;
             if(master == peer && room.CheckMasterLeaveShouldDestroyRoom())
             {
@@ -349,7 +348,7 @@ public class NetProcessor
     public void OnUpdate(float deltaTime)
     {
         _serverTime += deltaTime;
-        _serverSocket.Update();
+        _serverSocket.Update(deltaTime);
 
         foreach(var x in _allRooms.Values)
         {
