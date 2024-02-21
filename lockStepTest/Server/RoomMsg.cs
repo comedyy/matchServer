@@ -216,7 +216,7 @@ public partial struct RoomUser : INetSerializable
         needAiHelp = reader.GetBool();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
-        OnDeserialize();
+        OnDeserialize(reader);
 #endif
     }
 
@@ -254,7 +254,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
         AIHelperIndex = reader.GetByte();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
-        OnDeserialize();
+        OnDeserialize(reader);
 #endif
     }
 

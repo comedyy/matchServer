@@ -332,11 +332,10 @@ public struct ServerEnterLoading : INetSerializable
 }
 
 
-public struct ServerPackageItem : INetSerializable
+public partial struct ServerPackageItem : INetSerializable
 {
     public ushort frame;
-    public List<MessageItem> list;
-
+ 
     // server write 
     public FrameMsgBuffer clientFrameMsgList;
 
@@ -353,15 +352,9 @@ public struct ServerPackageItem : INetSerializable
     {
         var msgType = reader.GetByte();
         frame = reader.GetUShort();
-        var count = reader.GetByte();
-        if (count > 0)
-        {
-            list = ListPool<MessageItem>.Get();
-            for (int i = 0; i < count; i++)
-            {
-                list.Add(MessageItem.FromReader(reader));
-            }
-        }
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
+       OnDeserialize(reader);
+#endif
     }
 }
 
