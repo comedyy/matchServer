@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Game;
 using LiteNetLib.Utils;
 
 public enum MsgType1 : byte
@@ -331,26 +330,54 @@ public struct ServerEnterLoading : INetSerializable
     }
 }
 
+public partial struct ServerPackageItemList : INetSerializable
+{
+    public ServerPackageItem[] serverPackages;
+    public FrameMsgBuffer clientFrameMsgList;
+    public void Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        var count = reader.GetByte();
+        serverPackages = new ServerPackageItem[count];
+        for(int i = 0; i < count; i ++)
+        {
+            var total = reader.AvailableBytes;
+            serverPackages[i] = reader.Get<ServerPackageItem>();
+        }
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ServerFrameMsg);
+        writer.Put(clientFrameMsgList.FrameCount);
+
+        for(int i = 0 ; i < clientFrameMsgList.FrameCount; i++)
+        {
+            var total = writer.Length;
+            var frame = clientFrameMsgList.FromFrame + i;
+            ServerPackageItem x = new ServerPackageItem(){frame = (ushort)frame, clientFrameMsgList = clientFrameMsgList};
+            writer.Put(x);
+        }
+    }
+}
+
 
 public partial struct ServerPackageItem : INetSerializable
 {
     public ushort frame;
  
-    // server write 
     public FrameMsgBuffer clientFrameMsgList;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)MsgType1.ServerFrameMsg);
         writer.Put(frame);
-        var count = clientFrameMsgList.Count;
+        var count = clientFrameMsgList.GetMsgCount(frame);
         writer.Put((byte)count);
         clientFrameMsgList.WriterToWriter(writer, frame);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
-        var msgType = reader.GetByte();
         frame = reader.GetUShort();
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
        OnDeserialize(reader);

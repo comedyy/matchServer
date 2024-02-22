@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    public const int version = 1;
+    public const int version = 2;
 }
 
 public enum TeamConnectParam
@@ -37,6 +37,7 @@ public struct ServerSetting : INetSerializable
     internal byte waitFinishStageTimeMs;
     public IntPair2[] Conditions;
     public bool keepRoomAfterBattle;
+    public byte syncFrameCount;     // 服务器多少帧同步一次数据
 
     public void Deserialize(NetDataReader reader)
     {
@@ -50,6 +51,7 @@ public struct ServerSetting : INetSerializable
         waitFinishStageTimeMs = reader.GetByte();
         Conditions = IntPair2.DeserializeArray(reader);
         keepRoomAfterBattle = reader.GetBool();
+        syncFrameCount = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -63,6 +65,7 @@ public struct ServerSetting : INetSerializable
         writer.Put(waitFinishStageTimeMs);
         IntPair2.SerializeArray(writer, Conditions);
         writer.Put(keepRoomAfterBattle);
+        writer.Put(syncFrameCount);
     }
 }
 
@@ -74,13 +77,11 @@ public struct CreateRoomMsg : INetSerializable
     public ServerSetting setting;
     public byte[] joinShowInfo;
     public byte[] roomShowInfo;
-    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte(); // msgHeader
 
-        msgVersion = reader.GetUShort();
         startBattleMsg = reader.GetBytesWithLength();
         join = reader.GetBytesWithLength();
         
@@ -93,7 +94,6 @@ public struct CreateRoomMsg : INetSerializable
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.CreateRoom);
-        writer.Put(msgVersion);
         writer.PutBytesWithLength(startBattleMsg);
         writer.PutBytesWithLength(join);
 
@@ -110,12 +110,10 @@ public struct JoinRoomMsg : INetSerializable
     public int roomId;
     public byte[] joinMessage;
     public byte[] joinShowInfo;
-    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
-        msgVersion = reader.GetUShort();
         roomId = reader.GetInt();
         joinMessage = reader.GetBytesWithLength();
         joinShowInfo = reader.GetBytesWithLength();
@@ -124,7 +122,6 @@ public struct JoinRoomMsg : INetSerializable
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.JoinRoom);
-        writer.Put(msgVersion);
         writer.Put(roomId);
         writer.PutBytesWithLength(joinMessage);
         writer.PutBytesWithLength(joinShowInfo);
@@ -444,12 +441,14 @@ public struct RoomUserIdMsg : INetSerializable
 {
     public int userId;
     public TeamConnectParam connectParam;
+    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
         userId = reader.GetInt();
         connectParam = (TeamConnectParam)reader.GetByte();
+        msgVersion = reader.GetUShort();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -457,6 +456,7 @@ public struct RoomUserIdMsg : INetSerializable
         writer.Put((byte)MsgType1.SetUserId);
         writer.Put(userId);
         writer.Put((byte)connectParam);
+        writer.Put(msgVersion);
     }
 }
 

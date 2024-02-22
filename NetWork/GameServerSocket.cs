@@ -216,7 +216,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
                 _lookupIdToPeer[msg.userId] = peer;
                 _lookupPeerToId[peer] = msg.userId;
 
-                OnPeerReconnected(msg.userId, msg.connectParam);
+                OnPeerReconnected(msg.userId, msg.connectParam, msg.msgVersion);
                 return;
             }
 
@@ -249,7 +249,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public int UserCount => _lookupPeerToId.Count;
 
     public Action<int> OnPeerDisconnect{get;set;}
-    public Action<int, TeamConnectParam> OnPeerReconnected{get;set;}
+    public Action<int, TeamConnectParam, ushort> OnPeerReconnected{get;set;}
     public Func<RoomListMsg> GetAllRoomList{get;set;}
     public Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
     public Func<int, GetRoomStateResponse> GetRoomState{get;set;}

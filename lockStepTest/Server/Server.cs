@@ -28,6 +28,8 @@ public class Server
     public float preFrameSeconds;
     float _tick;
     ServerSyncType _syncType;
+    int _syncFrameCount = 0;
+    int _lastSendMsgFrame = 0;
     int _maxFrame;
 
     IServerGameSocket _socket;
@@ -57,6 +59,7 @@ public class Server
         _netPeers = netPeers;
         _syncType = serverSetting.syncType;
         _maxFrame = serverSetting.maxFrame == 0 ? ushort.MaxValue : serverSetting.maxFrame;
+        _syncFrameCount = Math.Max(1, (int)serverSetting.syncFrameCount);
 
         _waitFinishStageTime = serverSetting.waitFinishStageTimeMs == 0 ? 10 : serverSetting.waitFinishStageTimeMs / 1000f;
         _waitReadyStageTime = serverSetting.waitReadyStageTimeMs == 0 ? 10 : serverSetting.waitReadyStageTimeMs / 1000f;
@@ -287,14 +290,22 @@ public class Server
 
     private void BroadCastMsg()
     {
-        if(_syncType == ServerSyncType.SyncMsgOnlyHasMsg && _frameMsgBuffer.Count == 0)
+        if(_syncType == ServerSyncType.SyncMsgOnlyHasMsg && _frameMsgBuffer.TotalMsgCount == 0)
         {
             return;
         }
 
-        _socket.SendMessage(_netPeers, new ServerPackageItem(){
-            frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
-        });
+        _frameMsgBuffer.RecordSendFrame(_frame);
+
+        var diff = _frame - _lastSendMsgFrame;
+        if(diff >= _syncFrameCount)
+        {
+            _lastSendMsgFrame = _frame;
+            _socket.SendMessage(_netPeers, new ServerPackageItemList(){
+                clientFrameMsgList = _frameMsgBuffer
+            });
+            _frameMsgBuffer.Reset();
+        }
     }
 
     public void StartBattle(RoomStartBattleMsg startMessage)
