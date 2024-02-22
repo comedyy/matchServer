@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    public const int version = 2;
+    public const int version = 3;
 }
 
 public enum TeamConnectParam
