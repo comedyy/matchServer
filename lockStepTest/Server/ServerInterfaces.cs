@@ -18,7 +18,7 @@ public interface IServerGameSocket : ILifeCircle
     int PeerCount{get;}
     int UserCount{get;}
     Action<int> OnPeerDisconnect { get; set; }
-    Action<int, TeamConnectParam, ushort> OnPeerReconnected { get; set; }
+    Action<int, TeamConnectParam> OnPeerReconnected { get; set; }
     void SendMessage<T>(IEnumerable<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(List<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(int peers, T t) where T : INetSerializable;
@@ -35,20 +35,9 @@ public interface ILifeCircle
     void OnDestroy();
 }
 
-
-struct SendItem
+public enum ConnectErrorCode : byte
 {
-    public float addTime;
-    public byte[] bytes;
-}
-
-struct ReceiveItem
-{
-    public float addTime;
-    public byte[] bytes;
-}
-
-interface IConnectionCount
-{
-    int Count{get;}
+    None,
+    ConnectMax = 1,
+    ConnectVersion = 2,
 }

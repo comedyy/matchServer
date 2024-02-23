@@ -166,16 +166,8 @@ public class NetProcessor
     }
 
     
-    private void OnReconnect(int peer, TeamConnectParam teamParam, ushort roomMsgversion)
+    private void OnReconnect(int peer, TeamConnectParam teamParam)
     {
-        if(roomMsgversion != RoomMsgVersion.version)
-        {
-            _serverSocket.SendMessage(peer, new RoomErrorCode(){
-                roomError = RoomError.MsgVersionError
-            });
-            return;
-        }
-
         if(teamParam == TeamConnectParam.None) return;
 
         if(!_allUserRooms.TryGetValue(peer, out var room))

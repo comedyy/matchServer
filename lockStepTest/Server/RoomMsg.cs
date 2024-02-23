@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    public const int version = 3;
+    public const int version = 4;
 }
 
 public enum TeamConnectParam
@@ -417,7 +417,6 @@ public enum RoomError : byte
     LeaveErrorInBattle = 9,
     JoinRoomErrorInsideRoom = 10,
     UpdatFailedMemberNotExist = 11,
-    MsgVersionError = 12,
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -441,14 +440,12 @@ public struct RoomUserIdMsg : INetSerializable
 {
     public int userId;
     public TeamConnectParam connectParam;
-    public ushort msgVersion;
 
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
         userId = reader.GetInt();
         connectParam = (TeamConnectParam)reader.GetByte();
-        msgVersion = reader.GetUShort();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -456,7 +453,6 @@ public struct RoomUserIdMsg : INetSerializable
         writer.Put((byte)MsgType1.SetUserId);
         writer.Put(userId);
         writer.Put((byte)connectParam);
-        writer.Put(msgVersion);
     }
 }
 

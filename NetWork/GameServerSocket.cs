@@ -12,14 +12,15 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     private NetDataWriter _dataWriter;
     private int _maxUserConnected;
     private int _port;
-
+    private ushort _version;
     Dictionary<NetPeer, int> _lookupPeerToId = new Dictionary<NetPeer, int>();
     Dictionary<int, NetPeer> _lookupIdToPeer = new Dictionary<int, NetPeer>();
 
-    public GameServerSocket(int countUser, int port)
+    public GameServerSocket(int countUser, int port, ushort version)
     {
         this._maxUserConnected = countUser;
         this._port = port;
+        this._version = version;
         NetDebug.Logger = this;
     }
 
@@ -188,11 +189,29 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     {
         if(_lookupPeerToId.Count >= _maxUserConnected)
         {
-            request.Reject();
+            NetDataWriter writer = new NetDataWriter();
+            writer.Put((byte)ConnectErrorCode.ConnectMax);
+            request.Reject(writer);
             return;
         }
 
-        request.AcceptIfKey("wsa_game");
+        var appName = request.Data.GetString();
+        var version = request.Data.GetUShort();
+
+        if(appName != "wsa_game")
+        {
+            request.Reject();
+        }
+        else if(version != _version)
+        {
+            NetDataWriter writer = new NetDataWriter();
+            writer.Put((byte)ConnectErrorCode.ConnectVersion);
+            request.Reject(writer);
+        }
+        else
+        {
+            request.Accept();
+        }
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -217,7 +236,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
                 _lookupIdToPeer[msg.userId] = peer;
                 _lookupPeerToId[peer] = msg.userId;
 
-                OnPeerReconnected(msg.userId, msg.connectParam, msg.msgVersion);
+                OnPeerReconnected(msg.userId, msg.connectParam);
                 return;
             }
 
@@ -250,7 +269,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public int UserCount => _lookupPeerToId.Count;
 
     public Action<int> OnPeerDisconnect{get;set;}
-    public Action<int, TeamConnectParam, ushort> OnPeerReconnected{get;set;}
+    public Action<int, TeamConnectParam> OnPeerReconnected{get;set;}
     public Func<RoomListMsg> GetAllRoomList{get;set;}
     public Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
     public Func<int, GetRoomStateResponse> GetRoomState{get;set;}

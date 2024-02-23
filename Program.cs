@@ -167,7 +167,7 @@ class Program
         if (!_dicConfigs.TryGetValue("port", out port)) port = 5000;
 
         var initRoomId = GetInitRoomId();
-        _netProcessor = new NetProcessor(new GameServerSocket(1000, port), initRoomId);
+        _netProcessor = new NetProcessor(new GameServerSocket(1000, port, RoomMsgVersion.version), initRoomId);
     }
 
     static string roomTxt = $"{appConfigFolder}/roomId.txt";
