@@ -29,6 +29,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         _dataWriter = new NetDataWriter();
         _netServer = new NetManager(this);
         _netServer.AutoRecycle = true;
+        _netServer.UseNativeSockets = true;
         _netServer.UnconnectedMessagesEnabled = true;
         _netServer.Start(_port);
         _netServer.UpdateTime = 15;
@@ -142,7 +143,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 #region INetEventListener
     public void OnPeerConnected(NetPeer peer)
     {
-        Console.WriteLine("[SERVER] We have new peer " + peer.EndPoint);
+        Console.WriteLine($"[SERVER] We have new peer {peer.Address}:{peer.Port}");
         _lookupPeerToId.Add(peer, 0);
     }
 
@@ -196,7 +197,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-         Console.WriteLine("[SERVER] peer disconnected " + peer.EndPoint + ", info: " + disconnectInfo.Reason);
+         Console.WriteLine($"[SERVER] peer disconnected {peer.Address}:{peer.Port}, info: {disconnectInfo.Reason}");
         if(_lookupPeerToId.TryGetValue(peer, out var id))
         {
             _lookupIdToPeer.Remove(id);
