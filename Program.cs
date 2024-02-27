@@ -112,7 +112,15 @@ class Program
         {
             frame ++;
             var targetMs = frame * 50;
-            _netProcessor.OnUpdate(msTick / 1000f);
+
+            try
+            {
+                _netProcessor.OnUpdate(msTick / 1000f);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message + " " + e.StackTrace); 
+            }
 
             var logicTime = (int)(watch.ElapsedMilliseconds - msEndOfFrame);
             _watch.AddTick(logicTime, _netProcessor.GetStatus);

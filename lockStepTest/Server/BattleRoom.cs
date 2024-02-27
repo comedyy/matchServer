@@ -47,7 +47,6 @@ public class ServerBattleRoom
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting; 
     int _battleCount = 0;
-    int _aiHelperIndex = -1;
 
     int MaxRoomUsers
     {
@@ -80,6 +79,13 @@ public class ServerBattleRoom
 
     public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, bool isRobert)
     {
+        // 服务器开始之后不应该让它加入。
+        if(_server != null)
+        {
+            _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RoomNotExist});
+            return false;
+        }
+
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var isNewUser = index < 0;
         if(isNewUser) 
