@@ -374,7 +374,7 @@ public class NetProcessor
     
     internal string GetStatus()
     {
-        return $"房间{_allRooms.Count}个, user{_allUserRooms.Count}个 Total内存:{GC.GetTotalMemory(false) / (1024f * 1024):0.00}M net:peer:[{_serverSocket.PeerCount}] user:[{_serverSocket.UserCount}]";
+        return $"房间{_allRooms.Count}个, user{_allUserRooms.Count}个 Total内存:{GC.GetTotalMemory(false) / (1024f * 1024):0.00}M {_serverSocket.GetInfo()}";
     }
 
     public void Destroy()

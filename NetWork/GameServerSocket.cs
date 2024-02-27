@@ -28,10 +28,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public void Start()
     {
         _dataWriter = new NetDataWriter();
-        _netServer = new NetManager(this);
+        _netServer = new NetManager(this, new LiteNetLib.Layers.Crc32cLayer());
         _netServer.AutoRecycle = true;
         _netServer.UseNativeSockets = true;
         _netServer.UnconnectedMessagesEnabled = true;
+        _netServer.AllowPeerAddressChange = true;  // 玩家切网络自动回连
         _netServer.Start(_port);
         _netServer.UpdateTime = 15;
 
@@ -288,5 +289,10 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         {
             // ignore
         }
+    }
+
+    public string GetInfo()
+    {
+        return $"Net:PeerCount:{PeerCount}, UserCount:{UserCount}, SocketPackage:{NetPeer.GetPackgeInfo()}";
     }
 }

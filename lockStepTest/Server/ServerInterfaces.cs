@@ -26,6 +26,7 @@ public interface IServerGameSocket : ILifeCircle
     Func<RoomListMsg> GetAllRoomList{get;set;}
     Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
     Func<int, GetRoomStateResponse> GetRoomState{get;set;}
+    string GetInfo();
 }
 
 public interface ILifeCircle

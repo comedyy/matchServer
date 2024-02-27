@@ -1144,6 +1144,21 @@ namespace LiteNetLib
             }
             return ConnectRequestResult.None;
         }
+        
+        public static int[] AllPackageSize = new int[(int)PacketProperty.Empty];
+        public static int[] AllPackageCount = new int[(int)PacketProperty.Empty];
+        public static string GetPackgeInfo()
+        {
+            string x = "流量：";
+            for(int i = 0; i < AllPackageCount.Length; i++)
+            {
+                if(AllPackageCount[i] > 0)
+                {
+                    x += $"{(PacketProperty)i}:Size{AllPackageSize[i]},Count{AllPackageCount[i]}";
+                }
+            }
+            return x;
+        }
 
         //Process incoming packet
         internal void ProcessPacket(NetPacket packet)
@@ -1265,6 +1280,10 @@ namespace LiteNetLib
                 //Send without length information and merging
                 bytesSent = NetManager.SendRaw(_mergeData.RawData, NetConstants.HeaderSize + 2, _mergePos - 2, this);
             }
+
+            
+            AllPackageSize[(int)PacketProperty.Merged] += bytesSent;
+            AllPackageCount[(int)PacketProperty.Merged] ++;
 
             if (NetManager.EnableStatistics)
             {

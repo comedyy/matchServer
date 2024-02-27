@@ -508,13 +508,20 @@ namespace LiteNetLib
         internal int SendRawAndRecycle(NetPacket packet, IPEndPoint remoteEndPoint)
         {
             int result = SendRaw(packet.RawData, 0, packet.Size, remoteEndPoint);
+            NetPeer.AllPackageSize[(int)packet.Property] += result;
+            NetPeer.AllPackageCount[(int)packet.Property] ++;
+
             PoolRecycle(packet);
             return result;
         }
 
         internal int SendRaw(NetPacket packet, IPEndPoint remoteEndPoint)
         {
-            return SendRaw(packet.RawData, 0, packet.Size, remoteEndPoint);
+            var ret = SendRaw(packet.RawData, 0, packet.Size, remoteEndPoint);
+            NetPeer.AllPackageSize[(int)packet.Property] += ret;
+            NetPeer.AllPackageCount[(int)packet.Property] ++;
+
+            return ret;
         }
 
         internal int SendRaw(byte[] message, int start, int length, IPEndPoint remoteEndPoint)
