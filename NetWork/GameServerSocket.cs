@@ -293,6 +293,6 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 
     public string GetInfo()
     {
-        return $"Net:PeerCount:{PeerCount}, UserCount:{UserCount}, SocketPackage:{NetPeer.GetPackgeInfo()}";
+        return $"Net:PeerCount:{PeerCount}, UserCount:{UserCount}";
     }
 }
