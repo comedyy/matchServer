@@ -327,6 +327,10 @@ public class NetProcessor
             idRobert = createAutoCreateRoomRobertMsg.idRobert}
         );
 
+        JoinRoom(peer, new JoinRoomMsg(){
+            roomId = roomId, joinMessage = createAutoCreateRoomRobertMsg.joinUser, joinShowInfo = createAutoCreateRoomRobertMsg.joinShowInfoUser
+        });
+
         Console.WriteLine($"CreateRobertRoom:{roomId}");
     }
 

@@ -78,6 +78,7 @@ public struct CreateRoomMsg : INetSerializable
     public byte[] joinShowInfo;
     public byte[] roomShowInfo;
 
+
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte(); // msgHeader
@@ -662,11 +663,17 @@ public struct CreateAutoCreateRoomRobertMsg : INetSerializable
 {
     public CreateRoomMsg createRoomMsg;
     internal int idRobert;
+    public byte[] joinUser;
+    public byte[] joinShowInfoUser;
+
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         createRoomMsg = reader.Get<CreateRoomMsg>();
         idRobert = reader.GetInt();
+        
+        joinUser = reader.GetBytesWithLength();
+        joinShowInfoUser = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -674,6 +681,9 @@ public struct CreateAutoCreateRoomRobertMsg : INetSerializable
         writer.Put((byte)MsgType1.CreateAutoCreateRoomRobert);
         writer.Put(createRoomMsg);
         writer.Put(idRobert);
+
+        writer.PutBytesWithLength(joinUser);
+        writer.PutBytesWithLength(joinShowInfoUser);
     }
 }
 
