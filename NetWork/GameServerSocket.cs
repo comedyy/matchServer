@@ -78,6 +78,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     
 #region IMessageSendReceive
     public Action<int, NetDataReader> OnReceiveMsg{get;set;}
+    public Action<IPEndPoint, NetDataReader> OnUnConnectReceiveMsg{get;set;}
     
     public void SendMessage<T>(List<int> list, T t) where T : INetSerializable
     {
@@ -140,6 +141,13 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         UnityEngine.Profiling.Profiler.EndSample();
         #endif
     }
+
+    public void SendUnconnectedMessage<T>(IPEndPoint iPEndPoint, T t) where T : INetSerializable
+    {
+        _dataWriter.Reset();
+        _dataWriter.Put(t);
+        _netServer.SendUnconnectedMessage(_dataWriter, iPEndPoint);
+    }
 #endregion
 
 #region INetEventListener
@@ -157,28 +165,13 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader,
         UnconnectedMessageType messageType)
     {
-        var msgType = (MsgType1)reader.PeekByte();
-        if(msgType == MsgType1.GetAllRoomList && GetAllRoomList != null)
+        try
         {
-            var msg = GetAllRoomList();
-            _dataWriter.Reset();
-            _dataWriter.Put(msg);
-            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
+            OnUnConnectReceiveMsg(remoteEndPoint, reader);
         }
-        else if(msgType == MsgType1.GetRoomState && GetRoomState != null)
+        catch(Exception e)
         {
-            var msg = GetRoomState(reader.Get<GetRoomStateMsg>().idRoom);
-            _dataWriter.Reset();
-            _dataWriter.Put(msg);
-            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint); 
-        }
-        else if(msgType == MsgType1.GetUserState && GetUserState != null)
-        {
-            var userId = reader.Get<GetUserStateMsg>().userId;
-            var state = GetUserState(userId);
-            _dataWriter.Reset();
-            _dataWriter.Put(new GetUserStateMsg(){userId = userId, state = state});
-            _netServer.SendUnconnectedMessage(_dataWriter, remoteEndPoint);
+            Console.WriteLine(e.Message + " " + e.StackTrace);
         }
     }
 
@@ -271,9 +264,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 
     public Action<int> OnPeerDisconnect{get;set;}
     public Action<int, TeamConnectParam> OnPeerReconnected{get;set;}
-    public Func<RoomListMsg> GetAllRoomList{get;set;}
     public Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
-    public Func<int, GetRoomStateResponse> GetRoomState{get;set;}
 
     public void WriteNet(NetLogLevel level, string str, params object[] args)
     {

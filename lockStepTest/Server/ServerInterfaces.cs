@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
@@ -22,10 +23,10 @@ public interface IServerGameSocket : ILifeCircle
     void SendMessage<T>(IEnumerable<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(List<int> peers, T t) where T : INetSerializable;
     void SendMessage<T>(int peers, T t) where T : INetSerializable;
+    void SendUnconnectedMessage<T>(IPEndPoint point, T t) where T : INetSerializable;
     Action<int, NetDataReader> OnReceiveMsg{get;set;}
-    Func<RoomListMsg> GetAllRoomList{get;set;}
+    Action<IPEndPoint, NetDataReader> OnUnConnectReceiveMsg{get;set;}
     Func<int, GetUserStateMsg.UserState> GetUserState{get;set;}
-    Func<int, GetRoomStateResponse> GetRoomState{get;set;}
     string GetInfo();
 }
 

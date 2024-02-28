@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
@@ -22,7 +23,9 @@ public class NetProcessor
     public int RoomId { get; private set; }
     float _serverTime;
     IServerGameSocket _serverSocket;
-    public NetProcessor(IServerGameSocket socket, int initRoomId)
+    UniqueIdGenerator _generator;
+
+    public NetProcessor(IServerGameSocket socket, int initRoomId, KeyValuePair<int, int> IdRange)
     {
         RoomId = initRoomId;
         _serverSocket = socket;
@@ -30,9 +33,40 @@ public class NetProcessor
         _serverSocket.OnReceiveMsg = OnReceiveMsg;
         _serverSocket.OnPeerDisconnect = OnDisconnect;
         _serverSocket.OnPeerReconnected = OnReconnect;
-        _serverSocket.GetAllRoomList = GetRoomListMsg;
+        _serverSocket.OnUnConnectReceiveMsg = OnUnconnectMsg;
         _serverSocket.GetUserState = GetUserState;
-        _serverSocket.GetRoomState = GetRoomState;
+
+        _generator = new UniqueIdGenerator(IdRange.Key, IdRange.Value);
+    }
+
+    private void OnUnconnectMsg(IPEndPoint point, NetDataReader reader)
+    {
+        var msgType = (MsgType1)reader.PeekByte();
+        if(msgType == MsgType1.GetAllRoomList)
+        {
+            var msg = GetRoomListMsg();
+            _serverSocket.SendUnconnectedMessage(point, msg);
+        }
+        else if(msgType == MsgType1.GetRoomState)
+        {
+            var msg = GetRoomState(reader.Get<GetRoomStateMsg>().idRoom);
+            _serverSocket.SendUnconnectedMessage(point, msg);
+        }
+        else if(msgType == MsgType1.GetUserState)
+        {
+            var userId = reader.Get<GetUserStateMsg>().userId;
+            var state = GetUserState(userId);
+            var msg = new GetUserStateMsg(){userId = userId, state = state};
+            _serverSocket.SendUnconnectedMessage(point, msg);
+        }
+        else if(msgType == MsgType1.GetUniqueIdInServer)
+        {
+            var count = reader.Get<GetServerUniqueIdMsg>().count;
+            _serverSocket.SendUnconnectedMessage(point, new GetServerUniqueIdMsg(){
+                id = _generator.GeneratorUniqueId(count),
+                count = count
+            });
+        }
     }
 
     private void OnReceiveMsg(int peer, NetDataReader reader)

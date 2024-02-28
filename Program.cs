@@ -148,34 +148,55 @@ class Program
         }
     }
 
-    static Dictionary<string, int> _dicConfigs = new Dictionary<string, int>();
+    static Dictionary<string, int> _dicConfigs;
     private static void Init()
-    {
-        var configPath = $"{appConfigFolder}/appConfig.txt";
-        if(File.Exists(configPath))
-        {
-            var lines = File.ReadAllLines(configPath);
-            foreach(var x in lines)
-            {
-                var args = x.Split(",", StringSplitOptions.RemoveEmptyEntries);
-                if(args.Length < 2) continue;
-
-                _dicConfigs[args[0]] = int.Parse(args[1]);
-
-                Console.WriteLine($"Load {x}");
-            }
-        }
-        else
-        {
-            Console.WriteLine("未找到appConfig.txt");
-            File.WriteAllText(configPath, "port,5000");
-        }
-
-        int port;
-        if (!_dicConfigs.TryGetValue("port", out port)) port = 5000;
+    { 
+        var port = GetConfigId("port", 5000);
+        int uniqueIdBegin = GetConfigId("uniqueIdBegin", 40000);
+        int uniqueIdEnd = GetConfigId("uniqueIdEnd", 50000);
 
         var initRoomId = GetInitRoomId();
-        _netProcessor = new NetProcessor(new GameServerSocket(1000, port, RoomMsgVersion.version), initRoomId);
+        _netProcessor = new NetProcessor(new GameServerSocket(1000, port, RoomMsgVersion.version), initRoomId, new KeyValuePair<int, int>(uniqueIdBegin, uniqueIdEnd));
+    }
+    
+    static int GetConfigId(string name, int defaultValue)
+    {
+        if(_dicConfigs == null)
+        {
+            _dicConfigs = new Dictionary<string, int>();
+            var configPath = $"{appConfigFolder}/appConfig.txt";
+            if(File.Exists(configPath))
+            {
+                var lines = File.ReadAllLines(configPath);
+                foreach(var x in lines)
+                {
+                    var args = x.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    if(args.Length < 2) continue;
+
+                    _dicConfigs[args[0]] = int.Parse(args[1]);
+
+                    Console.WriteLine($"Load {x}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("未找到appConfig.txt");
+                File.WriteAllText(configPath, "port,5000");
+            }
+        }
+
+        int value;
+        if (_dicConfigs.TryGetValue(name, out value))
+        {
+            Console.WriteLine($"LoadedConfig {name} - {value}");
+        } 
+        else
+        {
+            value = defaultValue;
+            Console.WriteLine($"LoadedConfig {name} 未找到，default： - {value}");
+        }
+
+        return defaultValue;
     }
 
     static string roomTxt = $"{appConfigFolder}/roomId.txt";

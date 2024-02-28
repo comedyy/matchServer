@@ -42,6 +42,7 @@ public enum MsgType1 : byte
     UpdateMemberInfo = 122,
     CreateAutoJoinRobert = 123,     // 创建机器人，加入队伍
     CreateAutoCreateRoomRobert = 124,     // 创建机器人去创建房间
+    GetUniqueIdInServer = 125, // 获取服务器的唯一id。
 }
 
 [Serializable]
@@ -463,5 +464,23 @@ public struct IntPair2 : INetSerializable
 }
 
 
+public struct GetServerUniqueIdMsg : INetSerializable
+{
+    public int id;
+    public byte count;
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.GetUniqueIdInServer);
+        writer.Put(id);
+        writer.Put(count);
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        id = reader.GetInt();
+        count = reader.GetByte();
+    }
+}
 
 
