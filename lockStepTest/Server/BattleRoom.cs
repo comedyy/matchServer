@@ -5,6 +5,17 @@ using System.Collections.Generic;
 using System.Linq;
 using static SyncRoomOptMsg;
 
+public struct RobertStruct
+{
+    public bool isRobert;
+    public int robertDelay;
+
+    public RobertStruct(bool isRobert, int robertDelay)
+    {
+        this.isRobert = isRobert;
+        this.robertDelay = robertDelay;
+    }
+}
 
 public struct RoomMemberInfo
 {
@@ -16,15 +27,18 @@ public struct RoomMemberInfo
     public byte[] showInfo;
     public bool isInNeedAiState;
     public bool isRobert; // 是否是机器人
+    public int robertDelay; // 机器人延迟。
+    public float readyTime;
 
-    public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, bool isRobert) : this()
+    public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
     {
         this.id = peer;
         this.joinInfo = joinMessage;
         this.isOnLine = true;
         this.showInfo = showInfo;
         this.isInNeedAiState = false;
-        this.isRobert = isRobert;
+        this.isRobert = robertStruct.isRobert;
+        this.robertDelay = robertStruct.robertDelay;
     }
 }
 
@@ -77,7 +91,7 @@ public class ServerBattleRoom
         _setting = setting;
     }
 
-    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, bool isRobert)
+    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct)
     {
         // 服务器开始之后不应该让它加入。
         if(_server != null)
@@ -96,7 +110,7 @@ public class ServerBattleRoom
                 return false;
             }
 
-            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, joinShowInfo, isRobert));
+            _netPeers.Add(new RoomMemberInfo(peer, joinMessage, joinShowInfo, robertStruct));
         }
         else
         {
@@ -152,7 +166,7 @@ public class ServerBattleRoom
 
         for(int i = 0; i < _netPeers.Count; i++)
         {
-            SetIsReady(_netPeers[i].id, false);
+            SetIsReady(_netPeers[i].id, false, 0);
         }
 
         for(int i = 0; i < _netPeers.Count; i++)
@@ -196,13 +210,45 @@ public class ServerBattleRoom
             SwitchToRoomMode();
         }
 
-        // robert master start Battle
-        if(_netPeers.Count > 0 && _netPeers[0].isRobert && _netPeers.Count > 1)
+        UpdateRobertBehavior(roomTime);
+    }
+
+    private void UpdateRobertBehavior(float roomTime)
+    {
+        if(_server != null) return;
+        if(_netPeers.Count <= 1) return;
+
+        for(int i = 0; i < _netPeers.Count; i++)
         {
-            var hasUser = _netPeers.Any(m=>!m.isRobert);
-            if(hasUser)
+            var peer = _netPeers[i];
+            if(!peer.isRobert) continue;
+
+            var isMaster = i == 0;
+            if(isMaster)
             {
-                StartBattle(_netPeers[0].id);
+                // start game
+                var hasUser = _netPeers.Any(m=>!m.isRobert);
+                if(!hasUser) continue;
+
+                var battleStartDelay = _netPeers[0].robertDelay;
+
+                // all ready check
+                var allReadyAndTimeout = true;
+                for(int j = 1; j < _netPeers.Count; j++)
+                {
+                    allReadyAndTimeout &= _netPeers[j].isReady;
+                    allReadyAndTimeout &= (roomTime - _netPeers[j].readyTime > battleStartDelay);
+                }
+                if(!allReadyAndTimeout) continue;
+
+                StartBattle(peer.id);
+            }
+            else // ready
+            {
+                if(peer.isReady) continue;
+                if(roomTime - peer.onlineStateChangeTime < peer.robertDelay) continue;
+                
+                SetIsReady(peer.id, true, roomTime);
             }
         }
     }
@@ -291,11 +337,12 @@ public class ServerBattleRoom
         BroadcastRoomInfo();
     }
 
-    internal void SetIsReady(int peer, bool v)
+    internal void SetIsReady(int peer, bool v, float readyTime)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var x = _netPeers[index];
         x.isReady = v;
+        x.readyTime = readyTime;
         _netPeers[index] = x;
 
         // sync room list

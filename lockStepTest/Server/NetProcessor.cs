@@ -227,7 +227,7 @@ public class NetProcessor
     {
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
-            room.SetIsReady(peer, ready.isReady);
+            room.SetIsReady(peer, ready.isReady, _serverTime);
         }
     }
 
@@ -261,15 +261,10 @@ public class NetProcessor
 
         if(_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
         {
-            if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, true))
+            if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, new RobertStruct(true, createAutoJoinRobertMsg.readyDelay)))
             {
                 _allUserRooms[idRobert] = room;
                 room.SetUserOnLineState(idRobert, false, _serverTime);
-
-                if(room.Master != idRobert)
-                {
-                    room.SetIsReady(idRobert, true);
-                }
 
                 Console.WriteLine($"Join robert {idRobert}");
             }
@@ -294,7 +289,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, false))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0)))
             {
                 _allUserRooms[peer] = room;
             }
@@ -324,7 +319,7 @@ public class NetProcessor
             joinRoomMsg = new JoinRoomMsg(){
                 roomId = roomId, joinMessage = msg.join, joinShowInfo = msg.joinShowInfo
             }, 
-            idRobert = createAutoCreateRoomRobertMsg.idRobert}
+            idRobert = createAutoCreateRoomRobertMsg.idRobert, readyDelay = createAutoCreateRoomRobertMsg.delayStart}
         );
 
         JoinRoom(peer, new JoinRoomMsg(){
