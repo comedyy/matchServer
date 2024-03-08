@@ -252,17 +252,21 @@ public class Server
         if(maxFinishedStageValue < _stageIndex) return; // 都在当前stage
 
         bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
+        bool allFinishOrOffLine = false;
         for(int i = 0; i < _playerInfos.Length; i++)
         {
-            if(_playerInfos[i].finishedStageValue == maxFinishedStageValue)
+            var isFinish = _playerInfos[i].finishedStageValue == maxFinishedStageValue;
+            if(isFinish)
             {
                 var diff = _roomTime - _playerInfos[i].finishStageTime;
                 var isOK = diff > _waitFinishStageTime;
                 timeout |= isOK;
             }
+
+            allFinishOrOffLine &= (isFinish || !_playerInfos[i].isOnLine);
         }
 
-        var condition = timeout || _playerInfos.Min(m=>m.finishedStageValue) == maxFinishedStageValue;
+        var condition = timeout || allFinishOrOffLine;
         if(condition)
         {
             _pauseFrame = _frame;

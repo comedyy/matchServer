@@ -33,6 +33,7 @@ public class HashChecker
 
         var id = hash.id;
         var list = _listHash[id];
+        if(list.ContainsKey(hash.frame)) return null;
         list.Add(hash.frame, hash);
 
         return CheckHash(hash.frame);
