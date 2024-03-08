@@ -24,6 +24,7 @@ public class NetProcessor
     float _serverTime;
     IServerGameSocket _serverSocket;
     UniqueIdGenerator _generator;
+    Random _serverRandom;
 
     public NetProcessor(IServerGameSocket socket, int initRoomId, KeyValuePair<int, int> IdRange)
     {
@@ -37,6 +38,7 @@ public class NetProcessor
         _serverSocket.GetUserState = GetUserState;
 
         _generator = new UniqueIdGenerator(IdRange.Key, IdRange.Value);
+        _serverRandom = new Random(999);
     }
 
     private void OnUnconnectMsg(IPEndPoint point, NetDataReader reader)
@@ -312,7 +314,7 @@ public class NetProcessor
 
         var msg = createAutoCreateRoomRobertMsg.createRoomMsg;
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);
         _allRooms.Add(roomId, room);
 
         JoinRobert(new CreateAutoJoinRobertMsg(){
@@ -341,7 +343,7 @@ public class NetProcessor
         }
 
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){

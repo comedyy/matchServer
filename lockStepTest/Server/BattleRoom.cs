@@ -29,6 +29,7 @@ public struct RoomMemberInfo
     public bool isRobert; // 是否是机器人
     public int robertDelay; // 机器人延迟。
     public float readyTime;
+    public int robertLoadingPercent;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
     {
@@ -39,6 +40,7 @@ public struct RoomMemberInfo
         this.isInNeedAiState = false;
         this.isRobert = robertStruct.isRobert;
         this.robertDelay = robertStruct.robertDelay;
+        this.robertLoadingPercent = 0;
     }
 }
 
@@ -59,7 +61,8 @@ public class ServerBattleRoom
     public IEnumerable<int> AllOnLinePeers => _netPeers.Where(m=>m.isOnLine).Select(m=>m.id);
 
     const int MAX_USER_COUNT = 10;
-    ServerSetting _setting; 
+    ServerSetting _setting;
+    private Random _serverRandom;
     int _battleCount = 0;
 
     int MaxRoomUsers
@@ -82,13 +85,14 @@ public class ServerBattleRoom
     }
 
 
-    public ServerBattleRoom(int id, byte[] roomShowInfo, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
+    public ServerBattleRoom(int id, byte[] roomShowInfo, byte[] startBattle, IServerGameSocket socket, ServerSetting setting, Random serverRandom)
     {
         this.roomShowInfo = roomShowInfo;
         RoomId = id;
         _startBattle = startBattle;
         _socket = socket;
         _setting = setting;
+        this._serverRandom = serverRandom;
     }
 
     public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct)
@@ -453,6 +457,28 @@ public class ServerBattleRoom
     {
         roomSyncLoadingProcessMsg.id = peer;
         _socket.SendMessage(AllOnLinePeers, roomSyncLoadingProcessMsg);
+
+        var percent = roomSyncLoadingProcessMsg.percent;
+        for(int i = 0; i < _netPeers.Count; i++)
+        {
+            var x = _netPeers[i];
+            if(x.isRobert && percent > x.robertLoadingPercent && x.robertLoadingPercent < 100)
+            {
+                var randomValue = _serverRandom.NextDouble() + 0.3f;
+                x.robertLoadingPercent = x.robertLoadingPercent + (int)((percent - x.robertLoadingPercent) * randomValue);
+
+                x.robertLoadingPercent = Math.Min(100, x.robertLoadingPercent);
+                if(percent == 100)
+                {
+                    x.robertLoadingPercent = 100;
+                }
+
+                RoomSyncLoadingProcessMsg msg = new RoomSyncLoadingProcessMsg(){
+                    id = x.id, percent = x.robertLoadingPercent
+                };
+                _socket.SendMessage(AllOnLinePeers, msg);
+            }
+        }
     }
 
     internal void UserReloadServerOKMsgProcess(int peer)
