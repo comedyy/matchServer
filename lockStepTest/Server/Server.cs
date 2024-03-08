@@ -252,7 +252,7 @@ public class Server
         if(maxFinishedStageValue < _stageIndex) return; // 都在当前stage
 
         bool timeout = false;       // 有一个人完成了，倒计时10秒也要进入
-        bool allFinishOrOffLine = false;
+        bool allFinishOrOffLine = true;
         for(int i = 0; i < _playerInfos.Length; i++)
         {
             var isFinish = _playerInfos[i].finishedStageValue == maxFinishedStageValue;
