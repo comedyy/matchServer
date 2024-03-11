@@ -275,21 +275,33 @@ public struct ReadyStageMsg : INetSerializable
     }
 }
 
+public enum PauseGameReason
+{
+    None,
+    UserDead,
+    UserManualPause
+}
 
 public struct PauseGameMsg : INetSerializable
 {
     public bool pause;
+    public PauseGameReason pauseGameReason;
+    public int pauseMaxSecond;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.PauseGame);
         writer.Put(pause);
+        writer.Put((byte)pauseGameReason);
+        writer.Put(pauseMaxSecond);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         pause = reader.GetBool();
+        pauseGameReason = (PauseGameReason)reader.GetByte();
+        pauseMaxSecond = reader.GetInt();
     }
 }
 

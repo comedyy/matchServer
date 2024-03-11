@@ -14,10 +14,10 @@ enum GameState
 struct PlayerInfo
 {
     public int finishedStageValue;
-    public float finishStageTime;
+    public double finishStageTime;
 
     public int readyStageValue;
-    public float readyStageTime;
+    public double readyStageTime;
     public bool isOnLine;
 }
 
@@ -28,13 +28,13 @@ public class Server
     public float preFrameSeconds;
     float _tick;
     ServerSyncType _syncType;
-    int _maxFrame;
+    int _maxKeepSec;
 
     IServerGameSocket _socket;
     private List<int> _netPeers;
     HashChecker _hashChecker;
-    public int _pauseFrame = -1;
-    public float UserPauseTime{get; private set;}
+    public int _pauseFrame = 0;
+    double _pauseTime;
     
     GameState _gameState = GameState.NotBegin;
     private int _stageIndex;
@@ -45,9 +45,11 @@ public class Server
     public RoomStartBattleMsg _startMessage;
     float _waitFinishStageTime = 0;
     float _waitReadyStageTime = 0;
-    float _roomTime;
+    double _roomTime;
+    double _roomStartTime;
+    int _MaxManualPauseSec;
 
-    public Server(ServerSetting serverSetting, IServerGameSocket socket, List<int> netPeers)
+    public Server(ServerSetting serverSetting, IServerGameSocket socket, List<int> netPeers, double roomTime)
     {
         _frame = 0;
         _totalSeconds = 0;
@@ -56,27 +58,39 @@ public class Server
         _socket = socket;
         _netPeers = netPeers;
         _syncType = serverSetting.syncType;
-        _maxFrame = serverSetting.maxFrame == 0 ? ushort.MaxValue : serverSetting.maxFrame;
+        _maxKeepSec = serverSetting.maxSec == 0 ? 60 * 20 : serverSetting.maxSec;
 
         _waitFinishStageTime = serverSetting.waitFinishStageTimeMs == 0 ? 10 : serverSetting.waitFinishStageTimeMs / 1000f;
         _waitReadyStageTime = serverSetting.waitReadyStageTimeMs == 0 ? 10 : serverSetting.waitReadyStageTimeMs / 1000f;
+        _MaxManualPauseSec = Math.Min(serverSetting.pauseMaxSecond, 30);
+        _roomStartTime = roomTime;
+
+        _pauseFrame = 0;
+        _pauseTime = float.MaxValue;
     }
 
-    bool IsPause => _pauseFrame != int.MaxValue;
-
-    public void Update(float deltaTime, float roomTime)
+    public void Update(float deltaTime, double roomTime)
     {
         _roomTime = roomTime;
         if(_gameState != GameState.Running) return;
+        
+        if((_roomTime - _roomStartTime) >= _maxKeepSec) // timeout
+        {
+            _gameState = GameState.End;
+            _socket.SendMessage(_netPeers, new ServerCloseMsg());
+            return;
+        }
 
         UpdateReadyNextStageRoom();
 
-        if(_pauseFrame <= _frame) return; // 用户手动暂停
+        if(_pauseFrame <= _frame) // pause
+        {
+            UpdatePauseWhenPause();// 用户手动暂停
+            return; 
+        }
 
         UpdateFinishRoom();
 
-        if(!IsPause && deltaTime == 0) return; // // TImeScale == 0 并且未暂停，就是游戏在初始化
-        
         _totalSeconds += deltaTime;
         if(preFrameSeconds + _tick > _totalSeconds)
         {
@@ -87,11 +101,33 @@ public class Server
 
         _frame++;
         BroadCastMsg();
+    }
 
-        if(_frame == _maxFrame) // timeout
+    private void UpdatePauseWhenPause()
+    {
+        if(_pauseTime < _roomTime)
         {
-            _gameState = GameState.End;
-            _socket.SendMessage(_netPeers, new ServerCloseMsg());
+            ResumeGame();
+        }
+    }
+
+    public void ResumeGame()
+    {
+        _pauseFrame = int.MaxValue;
+        _pauseTime = 0;
+    }
+
+    private void SetPauseGame(float waitTime)
+    {
+        _pauseFrame = _frame + 1;
+
+        if(waitTime < 0)
+        {
+            _pauseTime = float.MaxValue;
+        }
+        else
+        {
+            _pauseTime = _roomTime + waitTime;
         }
     }
 
@@ -179,12 +215,12 @@ public class Server
 
             if(pause.pause)
             {
-                _pauseFrame = _frame + 1;
-                UserPauseTime = _roomTime;
+                SetPauseGame(_MaxManualPauseSec);
+                pause.pauseMaxSecond = _MaxManualPauseSec;
             }
             else
             {
-                _pauseFrame = int.MaxValue;
+                ResumeGame();
             }
 
             _socket.SendMessage(_netPeers, pause);
@@ -232,7 +268,7 @@ public class Server
                 stageIndex = _stageIndex,
             });
 
-            _pauseFrame = int.MaxValue;
+            ResumeGame();
         }
     }
 
@@ -248,6 +284,8 @@ public class Server
 
     private void UpdateFinishRoom()
     {
+        if(_stageIndex == 0) return;
+
         var maxFinishedStageValue = GetMaxFinishedStageValue();
         if(maxFinishedStageValue < _stageIndex) return; // 都在当前stage
 
@@ -269,7 +307,7 @@ public class Server
         var condition = timeout || allFinishOrOffLine;
         if(condition)
         {
-            _pauseFrame = _frame;
+            SetPauseGame(-1);
 
             if(maxFinishedStageValue == 999)
             {

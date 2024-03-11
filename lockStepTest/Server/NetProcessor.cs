@@ -21,7 +21,7 @@ public class NetProcessor
     Dictionary<int, ServerBattleRoom> _allUserRooms = new Dictionary<int, ServerBattleRoom>();
     Dictionary<int, ServerBattleRoom> _allRooms = new Dictionary<int, ServerBattleRoom>();
     public int RoomId { get; private set; }
-    float _serverTime;
+    double _serverTime;
     IServerGameSocket _serverSocket;
     UniqueIdGenerator _generator;
     Random _serverRandom;
@@ -197,7 +197,7 @@ public class NetProcessor
     {
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
-            room.StartBattle(peer);
+            room.StartBattle(peer, _serverTime);
         }
     }
 
@@ -366,7 +366,7 @@ public class NetProcessor
 
         CheckClearRoom();
     }
-    float _lastClearRoomTime = 0;
+    double _lastClearRoomTime = 0;
 
     private void CheckClearRoom()
     {

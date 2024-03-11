@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    public const int version = 5;
+    public const int version = 6;
 }
 
 public enum TeamConnectParam
@@ -30,20 +30,21 @@ public struct ServerSetting : INetSerializable
 {
     public ServerSyncType syncType;
     public float tick;
-    public ushort maxFrame;
+    public ushort maxSec;
     public RoomMasterLeaveOpt masterLeaveOpt;
     public byte maxCount;
     internal byte waitReadyStageTimeMs;
     internal byte waitFinishStageTimeMs;
     public IntPair2[] Conditions;
     public bool keepRoomAfterBattle;
-    public byte syncFrameCount;     // 服务器多少帧同步一次数据
+    public int pauseMaxSecond;
+
 
     public void Deserialize(NetDataReader reader)
     {
         syncType = (ServerSyncType)reader.GetByte();
         tick = reader.GetFloat();
-        maxFrame = reader.GetUShort();
+        maxSec = reader.GetUShort();
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
         maxCount = reader.GetByte();
 
@@ -51,21 +52,21 @@ public struct ServerSetting : INetSerializable
         waitFinishStageTimeMs = reader.GetByte();
         Conditions = IntPair2.DeserializeArray(reader);
         keepRoomAfterBattle = reader.GetBool();
-        syncFrameCount = reader.GetByte();
+        pauseMaxSecond = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)syncType);
         writer.Put(tick);
-        writer.Put(maxFrame);
+        writer.Put(maxSec);
         writer.Put((byte)masterLeaveOpt);
         writer.Put(maxCount);
         writer.Put(waitReadyStageTimeMs);
         writer.Put(waitFinishStageTimeMs);
         IntPair2.SerializeArray(writer, Conditions);
         writer.Put(keepRoomAfterBattle);
-        writer.Put(syncFrameCount);
+        writer.Put(pauseMaxSecond);
     }
 }
 

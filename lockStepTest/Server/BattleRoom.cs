@@ -23,12 +23,12 @@ public struct RoomMemberInfo
     public byte[] joinInfo;
     public bool isOnLine;
     public bool isReady;
-    public float onlineStateChangeTime;
+    public double onlineStateChangeTime;
     public byte[] showInfo;
     public bool isInNeedAiState;
     public bool isRobert; // 是否是机器人
     public int robertDelay; // 机器人延迟。
-    public float readyTime;
+    public double readyTime;
     public int robertLoadingPercent;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
@@ -145,7 +145,7 @@ public class ServerBattleRoom
         }
     }
 
-    public void StartBattle(int peer)
+    public void StartBattle(int peer, double serverTime)
     {
         if(_netPeers.Count == 0) return;
         if(peer != Master) return;
@@ -159,7 +159,7 @@ public class ServerBattleRoom
         HasBattle = true;
         _battleCount++;
 
-        _server = new Server(_setting, _socket, AllPeers.ToList());
+        _server = new Server(_setting, _socket, AllPeers.ToList(), serverTime);
 
         var startMessage = new RoomStartBattleMsg
         {
@@ -194,7 +194,7 @@ public class ServerBattleRoom
         #endif
     }
 
-    public void Update(float deltaTime, float roomTime)
+    public void Update(float deltaTime, double roomTime)
     {
         #if UNITY_EDITOR
         UnityEngine.Profiling.Profiler.BeginSample("NETBATTLE_BattleRoom.Update");
@@ -217,7 +217,7 @@ public class ServerBattleRoom
         UpdateRobertBehavior(roomTime);
     }
 
-    private void UpdateRobertBehavior(float roomTime)
+    private void UpdateRobertBehavior(double roomTime)
     {
         if(_server != null) return;
         if(_netPeers.Count <= 1) return;
@@ -245,7 +245,7 @@ public class ServerBattleRoom
                 }
                 if(!allReadyAndTimeout) continue;
 
-                StartBattle(peer.id);
+                StartBattle(peer.id, roomTime);
             }
             else // ready
             {
@@ -313,7 +313,7 @@ public class ServerBattleRoom
         _netPeers.Clear();
     }
 
-    internal void SetUserOnLineState(int peer, bool v, float _serverTime)
+    internal void SetUserOnLineState(int peer, bool v, double _serverTime)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         if(index < 0)
@@ -341,7 +341,7 @@ public class ServerBattleRoom
         BroadcastRoomInfo();
     }
 
-    internal void SetIsReady(int peer, bool v, float readyTime)
+    internal void SetIsReady(int peer, bool v, double readyTime)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var x = _netPeers[index];
@@ -365,7 +365,7 @@ public class ServerBattleRoom
         return true;
     }
 
-    public RoomEndReason NeedDestroy(float serverTime)
+    public RoomEndReason NeedDestroy(double serverTime)
     {
         // 1. 人走光了
         if(_netPeers.Count == 0) 
