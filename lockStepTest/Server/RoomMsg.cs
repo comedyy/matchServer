@@ -700,10 +700,14 @@ public struct RoomChatMsg : INetSerializable
 {
     public int id;
     public string context;
+    public string name;
+    public string head;
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         id = reader.GetInt();
+        name = reader.GetString();
+        head = reader.GetString();
         context = reader.GetString();
     }
 
@@ -711,6 +715,8 @@ public struct RoomChatMsg : INetSerializable
     {
         writer.Put((byte)MsgType1.Chat);
         writer.Put(id);
+        writer.Put(name);
+        writer.Put(head);
 
         if(context.Length > 256)
         {
