@@ -89,6 +89,7 @@ public class NetProcessor
             case MsgType1.RoomChangeUserPos: ChangeUserPos(peer, reader.Get<RoomChangeUserPosMsg>()); break;
             case MsgType1.RoomSyncLoadingProcess: SyncLoadingProcess(peer, reader.Get<RoomSyncLoadingProcessMsg>()); break;
             case MsgType1.UserReloadServerOK: UserReloadServerOKMsgProcess(peer); break;
+            case MsgType1.Chat: BroadcastChat(peer, reader.Get<RoomChatMsg>()); break;
             case MsgType1.GetRoomState: 
             case MsgType1.GetAllRoomList:
                 break;
@@ -98,6 +99,14 @@ public class NetProcessor
                     room.OnReceiveMsg(peer, reader);
                 }
                 break;
+        }
+    }
+
+    private void BroadcastChat(int peer, RoomChatMsg roomChatMsg)
+    {
+        if(_allUserRooms.TryGetValue(peer, out var room))  // 已经有房间
+        {
+            _serverSocket.SendMessage(room.AllOnLinePeers, roomChatMsg);
         }
     }
 

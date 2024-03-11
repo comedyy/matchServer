@@ -144,6 +144,9 @@ public class Server
                 {
                     unSyncInfos = unsyncs
                 });
+
+                _gameState = GameState.End;
+                // _socket.SendMessage(_netPeers, new ServerCloseMsg());
             }
 
             return;

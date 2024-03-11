@@ -43,6 +43,7 @@ public enum MsgType1 : byte
     CreateAutoJoinRobert = 123,     // 创建机器人，加入队伍
     CreateAutoCreateRoomRobert = 124,     // 创建机器人去创建房间
     GetUniqueIdInServer = 125, // 获取服务器的唯一id。
+    Chat = 126,
 }
 
 [Serializable]
@@ -204,6 +205,7 @@ public struct FrameHash : INetSerializable
     public int id;
     public int hash;
     public FrameHashItem[] allHashItems;
+    internal int hashIndex;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
@@ -211,6 +213,7 @@ public struct FrameHash : INetSerializable
         writer.Put(frame);
         writer.Put(id);
         writer.Put(hash);
+        writer.Put(hashIndex);
 
         int count = allHashItems == null ? 0 : allHashItems.Length;
         writer.Put(count);
@@ -226,6 +229,7 @@ public struct FrameHash : INetSerializable
         frame = reader.GetInt();
         id = reader.GetInt();
         hash = reader.GetInt();
+        hashIndex = reader.GetInt();
 
         var count = reader.GetInt();
         if (count > 0)
@@ -494,5 +498,3 @@ public struct GetServerUniqueIdMsg : INetSerializable
         count = reader.GetByte();
     }
 }
-
-

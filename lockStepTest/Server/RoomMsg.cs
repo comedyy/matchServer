@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    public const int version = 6;
+    public const int version = 7;
 }
 
 public enum TeamConnectParam
@@ -695,3 +695,28 @@ public struct CreateAutoCreateRoomRobertMsg : INetSerializable
     }
 }
 
+
+public struct RoomChatMsg : INetSerializable
+{
+    public int id;
+    public string context;
+    public void Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        id = reader.GetInt();
+        context = reader.GetString();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.Chat);
+        writer.Put(id);
+
+        if(context.Length > 256)
+        {
+            context = context.Substring(256);
+        }
+
+        writer.Put(context);
+    }
+}
