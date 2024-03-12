@@ -696,33 +696,23 @@ public struct CreateAutoCreateRoomRobertMsg : INetSerializable
 }
 
 
-public struct RoomChatMsg : INetSerializable
+public partial struct RoomChatMsg : INetSerializable
 {
-    public int id;
-    public string context;
-    public string name;
-    public string head;
+    public byte[] chatShowInfo;
+
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        id = reader.GetInt();
-        name = reader.GetString();
-        head = reader.GetString();
-        context = reader.GetString();
+        chatShowInfo = reader.GetBytesWithLength();
+        
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
+        OnDeserialize(reader);
+#endif
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.Chat);
-        writer.Put(id);
-        writer.Put(name);
-        writer.Put(head);
-
-        if(context.Length > 256)
-        {
-            context = context.Substring(256);
-        }
-
-        writer.Put(context);
+        writer.PutBytesWithLength(chatShowInfo);
     }
 }
