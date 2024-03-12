@@ -87,9 +87,8 @@ public class NetProcessor
             case MsgType1.StartRequest : StartBattle(peer, reader.Get<StartBattleRequest>()); break;
             case MsgType1.SetSpeed: SetRoomSpeed(peer, reader.Get<SetServerSpeedMsg>()); break;
             case MsgType1.RoomChangeUserPos: ChangeUserPos(peer, reader.Get<RoomChangeUserPosMsg>()); break;
-            case MsgType1.RoomSyncLoadingProcess: SyncLoadingProcess(peer, reader.Get<RoomSyncLoadingProcessMsg>()); break;
             case MsgType1.UserReloadServerOK: UserReloadServerOKMsgProcess(peer); break;
-            case MsgType1.Chat: BroadcastChat(peer, reader.Get<RoomChatMsg>()); break;
+            case MsgType1.BroadCastMsg: BroadcastMsg(peer, reader.Get<BroadCastMsg>()); break;
             case MsgType1.GetRoomState: 
             case MsgType1.GetAllRoomList:
                 break;
@@ -102,11 +101,11 @@ public class NetProcessor
         }
     }
 
-    private void BroadcastChat(int peer, RoomChatMsg roomChatMsg)
+    private void BroadcastMsg(int peer, BroadCastMsg msg)
     {
         if(_allUserRooms.TryGetValue(peer, out var room))  // 已经有房间
         {
-            _serverSocket.SendMessage(room.AllOnLinePeers, roomChatMsg);
+            _serverSocket.SendMessage(room.AllOnLinePeers, msg);
         }
     }
 
@@ -129,14 +128,6 @@ public class NetProcessor
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
             room.UserReloadServerOKMsgProcess(peer);
-        }
-    }
-
-    private void SyncLoadingProcess(int peer, RoomSyncLoadingProcessMsg roomSyncLoadingProcessMsg)
-    {
-        if(_allUserRooms.TryGetValue(peer, out var room))
-        {
-            room.UpdateLoadingProcess(peer, roomSyncLoadingProcessMsg);
         }
     }
 

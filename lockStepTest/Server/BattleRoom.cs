@@ -29,7 +29,6 @@ public struct RoomMemberInfo
     public bool isRobert; // 是否是机器人
     public int robertDelay; // 机器人延迟。
     public double readyTime;
-    public int robertLoadingPercent;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
     {
@@ -40,7 +39,6 @@ public struct RoomMemberInfo
         this.isInNeedAiState = false;
         this.isRobert = robertStruct.isRobert;
         this.robertDelay = robertStruct.robertDelay;
-        this.robertLoadingPercent = 0;
     }
 }
 
@@ -295,7 +293,7 @@ public class ServerBattleRoom
         roomShowInfo = roomShowInfo,
         AIHelperIndex = (byte)_netPeers.FindIndex(m=>!m.isInNeedAiState),
         userList = _netPeers.Select(m=>new RoomUser(){userInfo = m.showInfo,
-             isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, needAiHelp = m.isInNeedAiState }).ToArray()
+             isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, needAiHelp = m.isInNeedAiState, isRobert = m.isRobert }).ToArray()
     };
 
     internal void SetRoomSpeed(int peer, int speed)
@@ -451,34 +449,6 @@ public class ServerBattleRoom
         {
             updateRoomMemberList = RoomInfo,
         };
-    }
-
-    internal void UpdateLoadingProcess(int peer, RoomSyncLoadingProcessMsg roomSyncLoadingProcessMsg)
-    {
-        roomSyncLoadingProcessMsg.id = peer;
-        _socket.SendMessage(AllOnLinePeers, roomSyncLoadingProcessMsg);
-
-        var percent = roomSyncLoadingProcessMsg.percent;
-        for(int i = 0; i < _netPeers.Count; i++)
-        {
-            var x = _netPeers[i];
-            if(x.isRobert && percent > x.robertLoadingPercent && x.robertLoadingPercent < 100)
-            {
-                var randomValue = _serverRandom.NextDouble() + 0.3f;
-                x.robertLoadingPercent = x.robertLoadingPercent + (int)((percent - x.robertLoadingPercent) * randomValue);
-
-                x.robertLoadingPercent = Math.Min(100, x.robertLoadingPercent);
-                if(percent == 100)
-                {
-                    x.robertLoadingPercent = 100;
-                }
-
-                RoomSyncLoadingProcessMsg msg = new RoomSyncLoadingProcessMsg(){
-                    id = x.id, percent = x.robertLoadingPercent
-                };
-                _socket.SendMessage(AllOnLinePeers, msg);
-            }
-        }
     }
 
     internal void UserReloadServerOKMsgProcess(int peer)

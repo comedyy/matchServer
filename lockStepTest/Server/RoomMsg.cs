@@ -205,6 +205,7 @@ public partial struct RoomUser : INetSerializable
     public bool isReady;
     public uint userId;
     public bool needAiHelp;
+    public bool isRobert;
     
     public void Deserialize(NetDataReader reader)
     {
@@ -213,6 +214,7 @@ public partial struct RoomUser : INetSerializable
         userId = reader.GetUInt();
         userInfo = reader.GetBytesWithLength();
         needAiHelp = reader.GetBool();
+        isRobert = reader.GetBool();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
         OnDeserialize(reader);
@@ -226,6 +228,7 @@ public partial struct RoomUser : INetSerializable
         writer.Put(userId);
         writer.PutBytesWithLength(userInfo);
         writer.Put(needAiHelp);
+        writer.Put(isRobert);
     }
 }
 
@@ -574,25 +577,6 @@ public struct RoomChangeUserPosMsg : INetSerializable
     }
 }
 
-public struct RoomSyncLoadingProcessMsg : INetSerializable
-{
-    public int percent;
-    public int id;
-    void INetSerializable.Serialize(NetDataWriter writer)
-    {
-        writer.Put((byte)MsgType1.RoomSyncLoadingProcess);
-        writer.Put(percent);
-        writer.Put(id);
-    }
-
-    void INetSerializable.Deserialize(NetDataReader reader)
-    {
-        var msgType = reader.GetByte();
-        percent = reader.GetInt();
-        id = reader.GetInt();
-    }
-}
-
 public struct GetRoomStateMsg : INetSerializable
 {
     public int idRoom;
@@ -696,14 +680,22 @@ public struct CreateAutoCreateRoomRobertMsg : INetSerializable
 }
 
 
-public partial struct RoomChatMsg : INetSerializable
+public enum BroadCoastType : byte
 {
-    public byte[] chatShowInfo;
+    Chat = 0,
+    LoadingProgress = 1,
+}
+
+public partial struct BroadCastMsg : INetSerializable
+{
+    public BroadCoastType broadCoastType;
+    public byte[] data;
 
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
-        chatShowInfo = reader.GetBytesWithLength();
+        broadCoastType = (BroadCoastType)reader.GetByte();
+        data = reader.GetBytesWithLength();
         
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
         OnDeserialize(reader);
@@ -712,7 +704,8 @@ public partial struct RoomChatMsg : INetSerializable
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)MsgType1.Chat);
-        writer.PutBytesWithLength(chatShowInfo);
+        writer.Put((byte)MsgType1.BroadCastMsg);
+        writer.Put((byte)broadCoastType);
+        writer.PutBytesWithLength(data);
     }
 }

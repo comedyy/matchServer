@@ -33,7 +33,6 @@ public enum MsgType1 : byte
     GetUserState = 115,    // 查询玩家状态。无连接
     RoomEventSync = 116, // 房间的事件通知
     RoomChangeUserPos = 117,
-    RoomSyncLoadingProcess = 118,
     GetRoomState = 119,   // 获取房间状态，无连接
     GetRoomStateResponse = 119,   // 获取房间状态，无连接
     // GetUserJoinInfo = 120, 
@@ -43,7 +42,7 @@ public enum MsgType1 : byte
     CreateAutoJoinRobert = 123,     // 创建机器人，加入队伍
     CreateAutoCreateRoomRobert = 124,     // 创建机器人去创建房间
     GetUniqueIdInServer = 125, // 获取服务器的唯一id。
-    Chat = 126,
+    BroadCastMsg = 126,
 }
 
 [Serializable]
