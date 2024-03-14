@@ -289,7 +289,6 @@ public class ServerBattleRoom
 
     UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
         roomId = RoomId,
-        conditions = _setting.Conditions,
         roomShowInfo = roomShowInfo,
         AIHelperIndex = (byte)_netPeers.FindIndex(m=>!m.isInNeedAiState),
         userList = _netPeers.Select(m=>new RoomUser(){userInfo = m.showInfo,
@@ -472,5 +471,14 @@ public class ServerBattleRoom
 
         x.isInNeedAiState = need;
         _netPeers[index] = x;
+    }
+
+    internal void ChangeRoomInfo(int peer, ChangeRoomInfoMsg changeRoomInfoMsg)
+    {
+        if(Master != peer) return;
+
+        roomShowInfo = changeRoomInfoMsg.bytes;
+
+        BroadcastRoomInfo();
     }
 }

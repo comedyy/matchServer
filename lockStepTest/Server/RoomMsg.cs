@@ -35,7 +35,6 @@ public struct ServerSetting : INetSerializable
     public byte maxCount;
     internal byte waitReadyStageTimeMs;
     internal byte waitFinishStageTimeMs;
-    public IntPair2[] Conditions;
     public bool keepRoomAfterBattle;
     public int pauseMaxSecond;
 
@@ -50,7 +49,6 @@ public struct ServerSetting : INetSerializable
 
         waitReadyStageTimeMs = reader.GetByte();
         waitFinishStageTimeMs = reader.GetByte();
-        Conditions = IntPair2.DeserializeArray(reader);
         keepRoomAfterBattle = reader.GetBool();
         pauseMaxSecond = reader.GetInt();
     }
@@ -64,7 +62,6 @@ public struct ServerSetting : INetSerializable
         writer.Put(maxCount);
         writer.Put(waitReadyStageTimeMs);
         writer.Put(waitFinishStageTimeMs);
-        IntPair2.SerializeArray(writer, Conditions);
         writer.Put(keepRoomAfterBattle);
         writer.Put(pauseMaxSecond);
     }
@@ -236,7 +233,6 @@ public partial struct UpdateRoomMemberList : INetSerializable
 {
     public RoomUser[] userList;
     public int roomId;
-    public IntPair2[] conditions;
     public byte[] roomShowInfo;
     public byte AIHelperIndex;
 
@@ -251,7 +247,6 @@ public partial struct UpdateRoomMemberList : INetSerializable
             userList[i] = reader.Get<RoomUser>();
         }
 
-        conditions = IntPair2.DeserializeArray(reader);
         roomShowInfo = reader.GetBytesWithLength();
         AIHelperIndex = reader.GetByte();
 
@@ -272,7 +267,6 @@ public partial struct UpdateRoomMemberList : INetSerializable
             writer.Put(userList[i]);
         }
 
-        IntPair2.SerializeArray(writer, conditions);
         writer.PutBytesWithLength(roomShowInfo);
         writer.Put(AIHelperIndex);
     }
@@ -707,5 +701,21 @@ public partial struct BroadCastMsg : INetSerializable
         writer.Put((byte)MsgType1.BroadCastMsg);
         writer.Put((byte)broadCoastType);
         writer.PutBytesWithLength(data);
+    }
+}
+
+public struct ChangeRoomInfoMsg : INetSerializable
+{
+    public byte[] bytes;
+    public void Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
+        bytes = reader.GetBytesWithLength();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ChangeRoomInfo);
+        writer.PutBytesWithLength(bytes);
     }
 }

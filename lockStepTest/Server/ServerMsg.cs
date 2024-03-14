@@ -43,6 +43,7 @@ public enum MsgType1 : byte
     CreateAutoCreateRoomRobert = 124,     // 创建机器人去创建房间
     GetUniqueIdInServer = 125, // 获取服务器的唯一id。
     BroadCastMsg = 126,
+    ChangeRoomInfo = 127,
 }
 
 [Serializable]
