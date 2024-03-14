@@ -166,6 +166,7 @@ public struct RoomStartBattleMsg : INetSerializable
     public byte[] StartMsg;
     public List<byte[]> joinMessages;
     public bool isReconnect;
+    public byte[] roomShowInfo;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -179,6 +180,7 @@ public struct RoomStartBattleMsg : INetSerializable
             joinMessages.Add(reader.GetBytesWithLength());
         }
         isReconnect = reader.GetBool();
+        roomShowInfo = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -192,6 +194,7 @@ public struct RoomStartBattleMsg : INetSerializable
             writer.PutBytesWithLength(joinMessages[i]);
         }
         writer.Put(isReconnect);
+        writer.PutBytesWithLength(roomShowInfo);
     }
 }
 
