@@ -196,7 +196,7 @@ class Program
             Console.WriteLine($"LoadedConfig {name} 未找到，default： - {value}");
         }
 
-        return defaultValue;
+        return value;
     }
 
     static string roomTxt = $"{appConfigFolder}/roomId.txt";
