@@ -434,6 +434,7 @@ public class ServerBattleRoom
         _netPeers[toIndex] = fromItem;
 
         BroadcastRoomInfo();
+        _socket.SendMessage(AllOnLinePeers, new RoomChangeUserPosMsg(){fromIndex = fromIndex, toIndex = toIndex});
     }
 
     public void Error(int peer, RoomError error)
