@@ -283,7 +283,8 @@ public enum PauseGameReason
 {
     None,
     UserDead,
-    UserManualPause
+    UserManualPause,
+    AIOpt,
 }
 
 public struct PauseGameMsg : INetSerializable

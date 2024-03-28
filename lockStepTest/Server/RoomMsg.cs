@@ -3,7 +3,11 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
+    #if !UNITY_EDITOR && UNITY_ANDROID
+    public const int version = 0;
+    #else
     public const int version = 7;
+    #endif
 }
 
 public enum TeamConnectParam
@@ -710,15 +714,18 @@ public partial struct BroadCastMsg : INetSerializable
 public struct ChangeRoomInfoMsg : INetSerializable
 {
     public byte[] bytes;
+    public bool needCancelReady;
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
+        needCancelReady = reader.GetBool();
         bytes = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ChangeRoomInfo);
+        writer.Put(needCancelReady);
         writer.PutBytesWithLength(bytes);
     }
 }

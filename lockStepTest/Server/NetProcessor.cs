@@ -106,7 +106,7 @@ public class NetProcessor
     {
         if(_allUserRooms.TryGetValue(peer, out var room))  // 已经有房间
         {
-            room.ChangeRoomInfo(peer, changeRoomInfoMsg);
+            room.ChangeRoomInfo(peer, changeRoomInfoMsg, _serverTime);
         }
     }
 

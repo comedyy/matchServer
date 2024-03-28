@@ -108,6 +108,7 @@ public class Server
         if(_pauseTime < _roomTime)
         {
             ResumeGame();
+            _socket.SendMessage(_netPeers, new PauseGameMsg(){pause = false, pauseMaxSecond = _MaxManualPauseSec});
         }
     }
 

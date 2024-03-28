@@ -250,6 +250,7 @@ public class ServerBattleRoom
             {
                 if(peer.isReady) continue;
                 if(roomTime - peer.onlineStateChangeTime < peer.robertDelay) continue;
+                if(roomTime - peer.readyTime < peer.robertDelay) continue;
                 
                 SetIsReady(peer.id, true, roomTime);
             }
@@ -475,12 +476,33 @@ public class ServerBattleRoom
         _netPeers[index] = x;
     }
 
-    internal void ChangeRoomInfo(int peer, ChangeRoomInfoMsg changeRoomInfoMsg)
+    internal void ChangeRoomInfo(int peer, ChangeRoomInfoMsg changeRoomInfoMsg, double time)
     {
         if(Master != peer) return;
 
         roomShowInfo = changeRoomInfoMsg.bytes;
+        if(changeRoomInfoMsg.needCancelReady)
+        {
+            for(int i = 0; i < _netPeers.Count; i++)
+            {
+                var x = _netPeers[i];
+                x.readyTime = time;
+                x.isReady = false;
+                _netPeers[i] = x;
+            }
+        }
 
         BroadcastRoomInfo();
+
+        if(changeRoomInfoMsg.needCancelReady)
+        {
+            foreach(var x in AllOnLinePeers)
+            {
+                if(x != Master)
+                {
+                    _socket.SendMessage(x, changeRoomInfoMsg);
+                }
+            }
+        }
     }
 }
