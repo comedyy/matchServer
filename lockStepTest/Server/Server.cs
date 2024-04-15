@@ -138,12 +138,12 @@ public class Server
         if(msgType == (byte)MsgType1.HashMsg)
         {
             FrameHash hash = reader.Get<FrameHash>();
-            string[] unsyncs = _hashChecker.AddHash(hash);
-            if(unsyncs != null)
+            int unSyncHashIndex = _hashChecker.AddHash(hash);
+            if(unSyncHashIndex != 0)
             {
                 _socket.SendMessage(_netPeers, new UnSyncMsg()
                 {
-                    unSyncInfos = unsyncs
+                    unSyncHashIndex = (ushort)unSyncHashIndex
                 });
 
                 _gameState = GameState.End;

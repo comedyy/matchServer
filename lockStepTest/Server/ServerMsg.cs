@@ -51,6 +51,7 @@ public struct FrameHashItem
 {
     public byte hashType;
     public int hash;
+    public int frame;
 
     public List<int> listValue;
     public List<short> lstParamIndex;
@@ -204,7 +205,6 @@ public struct FrameHash : INetSerializable
     public int frame;
     public int id;
     public int hash;
-    public FrameHashItem[] allHashItems;
     internal int hashIndex;
 
     void INetSerializable.Serialize(NetDataWriter writer)
@@ -214,13 +214,6 @@ public struct FrameHash : INetSerializable
         writer.Put(id);
         writer.Put(hash);
         writer.Put(hashIndex);
-
-        int count = allHashItems == null ? 0 : allHashItems.Length;
-        writer.Put(count);
-        for (int i = 0; i < count; i++)
-        {
-            allHashItems[i].Write(writer);
-        }
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
@@ -230,17 +223,6 @@ public struct FrameHash : INetSerializable
         id = reader.GetInt();
         hash = reader.GetInt();
         hashIndex = reader.GetInt();
-
-        var count = reader.GetInt();
-        if (count > 0)
-        {
-            allHashItems = Pool.Count > 0 ? Pool.Dequeue() : new FrameHashItem[count];
-            for (int i = 0; i < count; i++)
-            {
-                allHashItems[i] = default;
-                allHashItems[i].Read(reader);
-            }
-        }
     }
 }
 
@@ -497,5 +479,24 @@ public struct GetServerUniqueIdMsg : INetSerializable
         var msgType = reader.GetByte();
         id = reader.GetInt();
         count = reader.GetByte();
+    }
+}
+
+
+public struct UnSyncMsg : INetSerializable
+{
+    public ushort unSyncHashIndex;
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+
+        unSyncHashIndex = reader.GetUShort();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.Unsync);
+
+        writer.Put(unSyncHashIndex);
     }
 }

@@ -336,64 +336,6 @@ public struct RoomListMsg : INetSerializable
     }
 }
 
-public struct UnSyncMsg : INetSerializable
-{
-    public string[] unSyncInfos;
-    public void Deserialize(NetDataReader reader)
-    {
-        reader.GetByte();
-
-        var count = reader.GetInt();
-        unSyncInfos = new string[count];
-        for(int i = 0; i < count; i++)
-        {
-            var subCount = reader.GetInt();
-            List<string> lst = new List<string>();
-            for(int j = 0; j < subCount; j++)
-            {
-                lst.Add(reader.GetString());
-            }
-
-            unSyncInfos[i] = string.Join("", lst);
-        }
-    }
-
-    public void Serialize(NetDataWriter writer)
-    {
-        writer.Put((byte)MsgType1.Unsync);
-
-        writer.Put(unSyncInfos.Length);
-        for(int i = 0; i < unSyncInfos.Length; i++)
-        {
-            var str = unSyncInfos[i];
-            var strLength = str.Length;
-            var maxSize = NetDataWriter.StringBufferMaxLength - 10;
-
-            if(strLength >= maxSize)
-            {
-                // 拆分。
-                var count = strLength / maxSize;
-                if(maxSize * count != strLength)
-                {
-                    count ++;
-                }
-
-                for(int j = 0; j < count; j++)
-                {
-                    var isLastOne = i == count - 1;
-                    var lastOneSize = strLength - maxSize * (count - 1);
-
-                    writer.Put(str.Substring(j * count, isLastOne ? lastOneSize : maxSize));
-                }
-            }
-            else
-            {
-                writer.Put(1);
-                writer.Put(unSyncInfos[i]);
-            }
-        }
-    }
-}
 public struct SetServerSpeedMsg : INetSerializable
 {
     public int speed;
@@ -685,6 +627,7 @@ public enum BroadCoastType : byte
 {
     Chat = 0,
     LoadingProgress = 1,
+    UnsyncInfo = 2,
 }
 
 public partial struct BroadCastMsg : INetSerializable
