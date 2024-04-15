@@ -486,11 +486,13 @@ public struct GetServerUniqueIdMsg : INetSerializable
 public struct UnSyncMsg : INetSerializable
 {
     public ushort unSyncHashIndex;
+    public ushort frame;
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
 
         unSyncHashIndex = reader.GetUShort();
+        frame = reader.GetUShort();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -498,5 +500,6 @@ public struct UnSyncMsg : INetSerializable
         writer.Put((byte)MsgType1.Unsync);
 
         writer.Put(unSyncHashIndex);
+        writer.Put(frame);
     }
 }

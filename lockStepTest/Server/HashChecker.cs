@@ -26,12 +26,7 @@ public class HashChecker
         }
     }
 
-    public int AddHash(FrameHash hash)
-    {
-        return CheckHashNew(hash);
-    }
-
-    private int CheckHashNew(FrameHash hash)
+    public bool AddHash(FrameHash hash)
     {
         GuaranteeSize(hash);
 
@@ -40,10 +35,10 @@ public class HashChecker
         if(currentHashIndex > lastIndex)
         {
             Console.WriteLine("inner error");
-            return 0;
+            return false;
         }
 
-        if(currentHashIndex < lastIndex) return 0;  // 过期
+        if(currentHashIndex < lastIndex) return false;  // 过期
         else if(lastIndex >= currentHashIndex)         // 在cache中
         {
             var diff = lastIndex - currentHashIndex;
@@ -61,17 +56,17 @@ public class HashChecker
                 {
                     // error
                     Console.WriteLine("error here compare.hashIndex != hash.hashIndex");
-                    return 0;
+                    return true;
                 }
 
                 if(compare.hash != hash.hash)
                 {
-                    return hash.hashIndex;
+                    return true;
                 }
             }
         }
 
-        return 0;
+        return false;
     }
 
     private void GuaranteeSize(FrameHash hash)
