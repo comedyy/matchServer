@@ -137,6 +137,8 @@ public class Server
         var msgType = reader.PeekByte();
         if(msgType == (byte)MsgType1.HashMsg)
         {
+            if(_gameState == GameState.End) return;
+
             FrameHash hash = reader.Get<FrameHash>();
             if(_hashChecker.AddHash(hash))
             {
