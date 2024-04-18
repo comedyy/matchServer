@@ -20,7 +20,7 @@ public enum FrameCheckErrorType
 
 public class HashChecker
 {
-    const int MAX_HASH_COUNT = 3200;
+    const int MAX_HASH_COUNT = 32;
     List<HashCompareItem> _allHashCompare;
 
 
