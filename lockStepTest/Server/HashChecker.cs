@@ -13,7 +13,7 @@ class HashCompareItem
 
 public class HashChecker
 {
-    const int MAX_HASH_COUNT = 32;
+    const int MAX_HASH_COUNT = 320;
     List<HashCompareItem> _allHashCompare;
 
 
