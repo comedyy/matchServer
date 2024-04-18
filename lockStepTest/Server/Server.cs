@@ -138,7 +138,8 @@ public class Server
         if(msgType == (byte)MsgType1.HashMsg)
         {
             FrameHash hash = reader.Get<FrameHash>();
-            if(_hashChecker.AddHash(hash))
+            var errorType = _hashChecker.AddHash(hash);
+            if(errorType != FrameCheckErrorType.None)
             {
                 if(_gameState == GameState.End) return;
 
@@ -146,6 +147,7 @@ public class Server
                 {
                     unSyncHashIndex = (ushort)hash.hashIndex,
                     frame = (ushort)hash.frame,
+                    errorType = (byte)errorType
                 });
 
                 _gameState = GameState.End;

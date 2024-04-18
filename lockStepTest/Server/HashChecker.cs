@@ -11,9 +11,16 @@ class HashCompareItem
     public List<int> whos = new List<int>();
 }
 
+public enum FrameCheckErrorType
+{
+    None,
+    HashError,
+    FrameError,
+}
+
 public class HashChecker
 {
-    const int MAX_HASH_COUNT = 320;
+    const int MAX_HASH_COUNT = 3200;
     List<HashCompareItem> _allHashCompare;
 
 
@@ -26,7 +33,7 @@ public class HashChecker
         }
     }
 
-    public bool AddHash(FrameHash hash)
+    public FrameCheckErrorType AddHash(FrameHash hash)
     {
         GuaranteeSize(hash);
 
@@ -35,38 +42,42 @@ public class HashChecker
         if(currentHashIndex > lastIndex)
         {
             Console.WriteLine("inner error");
-            return false;
+            return FrameCheckErrorType.None;
         }
 
-        if(currentHashIndex < lastIndex) return false;  // 过期
-        else if(lastIndex >= currentHashIndex)         // 在cache中
+        var firstIndex = lastIndex - _allHashCompare.Count + 1;
+        if(currentHashIndex < firstIndex) return FrameCheckErrorType.None;// 过期
+
+        var diff = lastIndex - currentHashIndex;
+        var compareIndex = _allHashCompare.Count - 1 - diff;
+        var compare = _allHashCompare[compareIndex];
+
+        if(compare.hash == 0)
         {
-            var diff = lastIndex - currentHashIndex;
-            var compareIndex = _allHashCompare.Count - 1 - diff;
-            var compare = _allHashCompare[compareIndex];
-
-            if(compare.hash == 0)
+            compare.frame = hash.frame;
+            compare.hash = hash.hash;
+        }
+        else
+        {
+            if(compare.hashIndex != hash.hashIndex)
             {
-                compare.frame = hash.frame;
-                compare.hash = hash.hash;
+                // error
+                Console.WriteLine($"error here hashIndex,  ${compare.hashIndex} != ${hash.hashIndex}");
+                return FrameCheckErrorType.HashError;
             }
-            else
-            {
-                if(compare.hashIndex != hash.hashIndex)
-                {
-                    // error
-                    Console.WriteLine("error here compare.hashIndex != hash.hashIndex");
-                    return true;
-                }
 
-                if(compare.hash != hash.hash)
-                {
-                    return true;
-                }
+            if(compare.hash != hash.hash)
+            {
+                return FrameCheckErrorType.HashError;
+            }
+
+            if(compare.frame != hash.frame)
+            {
+                return FrameCheckErrorType.FrameError;
             }
         }
 
-        return false;
+        return FrameCheckErrorType.None;
     }
 
     private void GuaranteeSize(FrameHash hash)

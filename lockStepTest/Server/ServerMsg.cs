@@ -487,12 +487,15 @@ public struct UnSyncMsg : INetSerializable
 {
     public ushort unSyncHashIndex;
     public ushort frame;
+    public byte errorType;
+
     public void Deserialize(NetDataReader reader)
     {
         reader.GetByte();
 
         unSyncHashIndex = reader.GetUShort();
         frame = reader.GetUShort();
+        errorType = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -501,5 +504,6 @@ public struct UnSyncMsg : INetSerializable
 
         writer.Put(unSyncHashIndex);
         writer.Put(frame);
+        writer.Put(errorType);
     }
 }
