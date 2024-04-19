@@ -2,4 +2,4 @@ set -v
 
 git pull 
 dotnet build -c Release
-./bin/Release/net6.0/dotnetServer --framework net8.0
+./bin/Release/net6.0/dotnetServer
