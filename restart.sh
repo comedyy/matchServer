@@ -1,4 +1,5 @@
 set -v
 
 git pull 
-dotnet run --property:Configuration=Release
+dotnet build -c Release
+./bin/Release/net8.0/dotnetServer
