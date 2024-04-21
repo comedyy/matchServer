@@ -13,6 +13,7 @@ enum GameState
 
 struct PlayerInfo
 {
+    public int id;
     public int finishedStageValue;
     public double finishStageTime;
 
@@ -27,7 +28,6 @@ public class Server
     public float _totalSeconds;
     public float preFrameSeconds;
     float _tick;
-    ServerSyncType _syncType;
     int _maxKeepSec;
 
     IServerGameSocket _socket;
@@ -57,7 +57,6 @@ public class Server
         _tick = serverSetting.tick;
         _socket = socket;
         _netPeers = netPeers;
-        _syncType = serverSetting.syncType;
         _maxKeepSec = serverSetting.maxSec == 0 ? 60 * 20 : serverSetting.maxSec;
 
         _waitFinishStageTime = serverSetting.waitFinishStageTimeMs == 0 ? 10 : serverSetting.waitFinishStageTimeMs / 1000f;
@@ -169,7 +168,7 @@ public class Server
                 return;
             }
 
-            var index = _netPeers.FindIndex(m=>m == peer);
+            var index = Array.FindIndex(_playerInfos, m=>m.id == peer);
             if(index < 0) return;
             
             if(_playerInfos[index].readyStageValue == readyStageValue)   // 已经确认过了
@@ -196,7 +195,7 @@ public class Server
                 return;
             }
 
-             var index = _netPeers.FindIndex(m=>m == peer);
+            var index = Array.FindIndex(_playerInfos, m=>m.id == peer);
             if(index < 0) return;
 
             if(_playerInfos[index].finishedStageValue == finishedStageValue)   // 已经确认过了
@@ -337,11 +336,6 @@ public class Server
 
     private void BroadCastMsg()
     {
-        if(_syncType == ServerSyncType.SyncMsgOnlyHasMsg && _frameMsgBuffer.Count == 0)
-        {
-            return;
-        }
-
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
             frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
         });
@@ -349,8 +343,12 @@ public class Server
 
     public void StartBattle(RoomStartBattleMsg startMessage)
     {
-        _hashChecker = new HashChecker(_netPeers.Count);
+        _hashChecker = new HashChecker();
         _playerInfos = new PlayerInfo[_netPeers.Count];
+        for(int i = 0; i < _playerInfos.Length; i++)
+        {
+            _playerInfos[i].id = _netPeers[i];
+        }
 
         _gameState = GameState.Running;
         
@@ -358,13 +356,27 @@ public class Server
         _startMessage = startMessage;
     }
 
+    public void RemovePeer(int peer)
+    {
+        _netPeers.Remove(peer);
+        var index = Array.FindIndex(_playerInfos, m=>m.id == peer);
+
+        if(index < 0) return;
+
+        _playerInfos[index].isOnLine = false;
+    }
+
     public void Destroy()
     {
     }
 
-    internal void SetOnlineState(int i, bool isOnLine)
+    internal void SetOnlineState(int peer, bool isOnLine)
     {
-        _playerInfos[i].isOnLine = isOnLine;
+        var index = Array.FindIndex(_playerInfos, m=>m.id == peer);
+
+        if(index < 0) return;
+
+        _playerInfos[index].isOnLine = isOnLine;
     }
 
     public bool IsBattleEnd => _gameState == GameState.End;

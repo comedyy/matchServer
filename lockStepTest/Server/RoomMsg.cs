@@ -16,26 +16,24 @@ public enum TeamConnectParam
     SyncInfo,
 }
 
-public enum ServerSyncType
-{
-    SyncMsgEventFrame,
-    SyncMsgOnlyHasMsg,
-}
-
 public enum RoomMasterLeaveOpt
 {
     RemoveRoomAndBattle,
-    OnlyRemoveRoomBeforeBattle,
     ChangeRoomMater,
 }
 
+public enum WhoCanLeaveRoomInBattle
+{
+    All,
+    OnlyMaster
+}
 
 public struct ServerSetting : INetSerializable
 {
-    public ServerSyncType syncType;
     public float tick;
     public ushort maxSec;
     public RoomMasterLeaveOpt masterLeaveOpt;
+    public WhoCanLeaveRoomInBattle whoCanLeaveRoomInBattle;
     public byte maxCount;
     internal byte waitReadyStageTimeMs;
     internal byte waitFinishStageTimeMs;
@@ -45,7 +43,6 @@ public struct ServerSetting : INetSerializable
 
     public void Deserialize(NetDataReader reader)
     {
-        syncType = (ServerSyncType)reader.GetByte();
         tick = reader.GetFloat();
         maxSec = reader.GetUShort();
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
@@ -59,7 +56,6 @@ public struct ServerSetting : INetSerializable
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)syncType);
         writer.Put(tick);
         writer.Put(maxSec);
         writer.Put((byte)masterLeaveOpt);

@@ -24,7 +24,7 @@ public class HashChecker
     List<HashCompareItem> _allHashCompare;
 
 
-    public HashChecker(int maxCount)
+    public HashChecker()
     {
         _allHashCompare = new List<HashCompareItem>();
         for(int i = 0; i < MAX_HASH_COUNT; i++)
