@@ -3,11 +3,7 @@ using LiteNetLib.Utils;
 
 public class RoomMsgVersion
 {
-    #if !UNITY_EDITOR && UNITY_ANDROID
-    public const int version = 0;
-    #else
     public const int version = 7;
-    #endif
 }
 
 public enum TeamConnectParam

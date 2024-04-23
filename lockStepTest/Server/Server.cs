@@ -137,12 +137,12 @@ public class Server
         var msgType = reader.PeekByte();
         if(msgType == (byte)MsgType1.HashMsg)
         {
+            if(_gameState == GameState.End) return;
+
             FrameHash hash = reader.Get<FrameHash>();
             var errorType = _hashChecker.AddHash(hash);
             if(errorType != FrameCheckErrorType.None)
             {
-                if(_gameState == GameState.End) return;
-
                 _socket.SendMessage(_netPeers, new UnSyncMsg()
                 {
                     unSyncHashIndex = (ushort)hash.hashIndex,
