@@ -544,6 +544,7 @@ namespace LiteNetLib
         }
 
         //Update function
+        ProfilerTick _watchLogicIdles = new ProfilerTick("NetManager.Socket.UpdateLogic.Idle");
         private void UpdateLogic()
         {
             var peersToRemove = new List<NetPeer>();
@@ -585,7 +586,11 @@ namespace LiteNetLib
 
                     int sleepTime = UpdateTime - (int)stopwatch.ElapsedMilliseconds;
                     if (sleepTime > 0)
+                    {
+                        _watchLogicIdles.BeginTick();
                         _updateTriggerEvent.WaitOne(sleepTime);
+                        _watchLogicIdles.EndTick();
+                    }
                 }
                 catch (ThreadAbortException)
                 {

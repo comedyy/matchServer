@@ -93,12 +93,18 @@ public class ServerBattleRoom
         this._serverRandom = serverRandom;
     }
 
-    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct)
+    public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct, byte gameId)
     {
+        if(gameId != _setting.gameId)
+        {
+            _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.GameIdNotSame});
+            return false;
+        }
+
         // 服务器开始之后不应该让它加入。
         if(_server != null)
         {
-            _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RoomNotExist});
+            _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RoomHasInBattle});
             return false;
         }
 

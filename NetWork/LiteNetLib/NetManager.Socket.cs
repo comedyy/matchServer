@@ -246,10 +246,8 @@ namespace LiteNetLib
             }
         }
 
-        ProfilerTick _watchReceive = new ProfilerTick("NetManager.Socket");
         private void ReceiveFrom(Socket s, ref EndPoint bufferEndPoint)
         {
-            _watchReceive.BeginTick();
             var packet = PoolGetPacket(NetConstants.MaxPacketSize);
 #if NET8_0_OR_GREATER
             var sockAddr = s.AddressFamily == AddressFamily.InterNetwork ? _sockAddrCacheV4 : _sockAddrCacheV6;
@@ -258,10 +256,10 @@ namespace LiteNetLib
 #else
             packet.Size = s.ReceiveFrom(packet.RawData, 0, NetConstants.MaxPacketSize, SocketFlags.None, ref bufferEndPoint);
             OnMessageReceived(packet, (IPEndPoint)bufferEndPoint);
-            _watchReceive.EndTick();
 #endif
         }
 
+        ProfilerTick _watchReceiveIdles = new ProfilerTick("NetManager.Socket.ReceiveLogic.Idle");
         private void ReceiveLogic()
         {
             EndPoint bufferEndPoint4 = new IPEndPoint(IPAddress.Any, 0);
@@ -302,7 +300,10 @@ namespace LiteNetLib
 
                         selectReadList.Add(socketv4);
                         selectReadList.Add(socketV6);
+                        
+                        _watchReceiveIdles.BeginTick();
                         Socket.Select(selectReadList, null, null, ReceivePollingTime);
+                        _watchReceiveIdles.EndTick();
                     }
                     //NetDebug.Write(NetLogLevel.Trace, $"[R]Received data from {bufferEndPoint}, result: {packet.Size}");
                 }

@@ -33,7 +33,7 @@ public class ProfilerTick
         _logicTime += logicMs;
         if(_watch.ElapsedMilliseconds > 5000) // 5秒tick一次
         {
-            Console.WriteLine($"【PROFILER】[{_profilerName}] average time = {1.0f * _logicTime / _watch.ElapsedMilliseconds:0.000} info:【{value?.Invoke()}】");
+            Console.WriteLine($"【PROFILER】[{_profilerName}] average timepercent = {1.0f * _logicTime / _watch.ElapsedMilliseconds:0.0%} info:【{value?.Invoke()}】");
             _watch.Restart();
             _logicTime = 0;
         }

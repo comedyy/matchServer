@@ -272,7 +272,8 @@ public class NetProcessor
 
         if(_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
         {
-            if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, new RobertStruct(true, createAutoJoinRobertMsg.readyDelay)))
+            if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, 
+                new RobertStruct(true, createAutoJoinRobertMsg.readyDelay), createAutoJoinRobertMsg.joinRoomMsg.gameId))
             {
                 _allUserRooms[idRobert] = room;
                 room.SetUserOnLineState(idRobert, false, _serverTime);
@@ -300,7 +301,7 @@ public class NetProcessor
                 }
             }
 
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0)))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0), joinRoomMsg.gameId))
             {
                 _allUserRooms[peer] = room;
             }
@@ -351,7 +352,28 @@ public class NetProcessor
             return;
         }
 
-        var roomId = ++RoomId;
+        var roomId = 0;
+        if(msg.setting.needJoinId)
+        {
+            roomId = ++RoomId;
+        }
+        else
+        {
+            for(int i = 0; i < 10; i++)
+            {
+                roomId = (int)_serverRandom.Next(10000, 99999);
+                if(!_allRooms.ContainsKey(roomId))
+                {
+                    break;
+                }
+            }
+
+            if(roomId == 0){
+                _serverSocket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RandomRoomIdGetError});
+                return;
+            }
+        }
+        
         var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);
         _allRooms.Add(roomId, room);
 

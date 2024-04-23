@@ -142,7 +142,7 @@ class Program
                 catch(Exception e)
                 {
                     // nothing
-                    Console.WriteLine("写入房间id异常" + e.Message);
+                    Console.WriteLine("write room id Exception " + e.Message);
                 }
             }
         }
@@ -180,7 +180,7 @@ class Program
             }
             else
             {
-                Console.WriteLine("未找到appConfig.txt");
+                Console.WriteLine("Not found appConfig.txt");
                 File.WriteAllText(configPath, "port,5000");
             }
         }
@@ -193,7 +193,7 @@ class Program
         else
         {
             value = defaultValue;
-            Console.WriteLine($"LoadedConfig {name} 未找到，default： - {value}");
+            Console.WriteLine($"LoadedConfig {name} NotFound, default： - {value}");
         }
 
         return value;
@@ -206,24 +206,23 @@ class Program
         {
             if(!File.Exists(roomTxt))
             {
-                Console.WriteLine("未找到房间id配置，初始0");
+                Console.WriteLine("Not Found RoomIdConfig, Init:0");
                 return 0;
             }
 
             var id = int.Parse(File.ReadAllText(roomTxt));
-            var targetId = id + 10000;
-
-            if(targetId < 0)
+            var targetId = id + 100000;
+            if(targetId > int.MaxValue)
             {
-                targetId = 100;
+                targetId = 100000;
             }
 
-            Console.WriteLine($"读取到房间配置：{id}, 更新房间初始id{targetId}");
+            Console.WriteLine($"get room id from config {id}, Set room init id = {targetId}");
             return targetId;
         }
         catch(Exception e)
         {
-            Console.WriteLine("读取房间id异常"+ e.Message);
+            Console.WriteLine("Get Room Id Exception "+ e.Message);
             return 0;
         }
     }

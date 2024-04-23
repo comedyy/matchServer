@@ -37,6 +37,8 @@ public struct ServerSetting : INetSerializable
     internal byte waitFinishStageTimeMs;
     public bool keepRoomAfterBattle;
     public int pauseMaxSecond;
+    public bool needJoinId;
+    public byte gameId;
 
 
     public void Deserialize(NetDataReader reader)
@@ -51,6 +53,8 @@ public struct ServerSetting : INetSerializable
         waitFinishStageTimeMs = reader.GetByte();
         keepRoomAfterBattle = reader.GetBool();
         pauseMaxSecond = reader.GetInt();
+        needJoinId = reader.GetBool();
+        gameId = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -64,6 +68,8 @@ public struct ServerSetting : INetSerializable
         writer.Put(waitFinishStageTimeMs);
         writer.Put(keepRoomAfterBattle);
         writer.Put(pauseMaxSecond);
+        writer.Put(needJoinId);
+        writer.Put(gameId);
     }
 }
 
@@ -109,6 +115,7 @@ public struct JoinRoomMsg : INetSerializable
     public int roomId;
     public byte[] joinMessage;
     public byte[] joinShowInfo;
+    public byte gameId;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -116,6 +123,7 @@ public struct JoinRoomMsg : INetSerializable
         roomId = reader.GetInt();
         joinMessage = reader.GetBytesWithLength();
         joinShowInfo = reader.GetBytesWithLength();
+        gameId = reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -124,6 +132,7 @@ public struct JoinRoomMsg : INetSerializable
         writer.Put(roomId);
         writer.PutBytesWithLength(joinMessage);
         writer.PutBytesWithLength(joinShowInfo);
+        writer.Put(gameId);
     }
 }
 
@@ -353,7 +362,7 @@ public enum RoomError : byte
     RoomFull = 1,
     JoinRoomErrorHasRoom = 2,
     CreateRoomErrorHasRoom = 3,
-    BattleNotExit = 4,
+    RoomHasInBattle = 4,
     AuthError = 5,
     ChangeErrorOutOfIndex = 6,
     RoomNotExist = 7,
@@ -361,6 +370,8 @@ public enum RoomError : byte
     LeaveErrorInBattle = 9,
     JoinRoomErrorInsideRoom = 10,
     UpdatFailedMemberNotExist = 11,
+    RandomRoomIdGetError = 12,
+    GameIdNotSame = 13,
 }
 
 public struct RoomErrorCode : INetSerializable
