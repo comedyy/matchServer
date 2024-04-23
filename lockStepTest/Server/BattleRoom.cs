@@ -78,8 +78,7 @@ public class ServerBattleRoom
 
     public bool CheckMasterLeaveShouldDestroyRoom()
     {
-        return _setting.masterLeaveOpt == RoomMasterLeaveOpt.RemoveRoomAndBattle 
-            || (_setting.masterLeaveOpt == RoomMasterLeaveOpt.OnlyRemoveRoomBeforeBattle && _server == null);
+        return _setting.masterLeaveOpt == RoomMasterLeaveOpt.RemoveRoomAndBattle;
     }
 
 
@@ -277,8 +276,16 @@ public class ServerBattleRoom
     {
         if(_server != null)
         {
-            Error(peer, RoomError.LeaveErrorInBattle);
-            return false;
+            var canLeaveInBattle = _setting.whoCanLeaveRoomInBattle == WhoCanLeaveRoomInBattle.All 
+                        || (_setting.whoCanLeaveRoomInBattle == WhoCanLeaveRoomInBattle.OnlyMaster && peer == Master);
+
+            if(!canLeaveInBattle)
+            {
+                Error(peer, RoomError.LeaveErrorInBattle);
+                return false;
+            }
+
+            _server.RemovePeer(peer);
         }
 
         _socket.SendMessage(AllOnLinePeers, new SyncRoomOptMsg(){ state = opt, param = peer});
@@ -339,7 +346,7 @@ public class ServerBattleRoom
 
         if(_server != null)
         {
-            _server.SetOnlineState(index, v);
+            _server.SetOnlineState(peer, v);
         }
 
         // sync room list
