@@ -1,5 +1,6 @@
 set -v
 
 git pull 
-dotnet build -c Release
-./bin/Debug/net8.0/dotnetServer
+rm -rf ./bin/
+dotnet build -c Release --framework net8.0
+./bin/Release/net8.0/dotnetServer
