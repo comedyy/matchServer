@@ -217,6 +217,7 @@ public class NetProcessor
 
         if(!_allUserRooms.TryGetValue(peer, out var room))
         {
+            Console.WriteLine("onreconnect not found User " + peer);
             _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
             return;
         }
