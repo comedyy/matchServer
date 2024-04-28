@@ -155,6 +155,7 @@ public class NetProcessor
             if(room.KickUser(peer, kickUserMsg.userId))
             {
                 _allUserRooms.Remove(kickUserMsg.userId);
+                Console.WriteLine("kick removeUser " + peer);
             }
         }
     }
@@ -257,6 +258,7 @@ public class NetProcessor
                 if(room.RemovePeer(peer, SyncRoomOptMsg.RoomOpt.Leave))
                 {
                     _allUserRooms.Remove(peer);
+                    Console.WriteLine("LeaveUser removeUser " + peer);
                 }
             }
         }
@@ -412,9 +414,10 @@ public class NetProcessor
         foreach(var x in allPeers)
         {
             _allUserRooms.Remove(x);
+            Console.WriteLine("removeRoom removeUser " + x);
         }
 
-        Console.WriteLine($"RemoveRoom:{room.RoomId} {roomEndReason}");
+        Console.WriteLine($"RemoveRoom:{room.RoomId} {roomEndReason} remainUserCount:{allPeers.Length}");
     }
     
     internal string GetStatus()

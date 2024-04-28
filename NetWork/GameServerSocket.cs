@@ -229,6 +229,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
                 var msg = reader.Get<RoomUserIdMsg>();
                 _lookupIdToPeer[msg.userId] = peer;
                 _lookupPeerToId[peer] = msg.userId;
+                Console.WriteLine("setId:" + msg.userId);
 
                 OnPeerReconnected(msg.userId, msg.connectParam);
                 return;
