@@ -31,6 +31,7 @@ public class HashChecker
         return CheckHashNew(hash);
     }
 
+
     private string[] CheckHashNew(FrameHash hash)
     {
         GuaranteeSize(hash);

@@ -135,6 +135,8 @@ public class Server
     public void AddMessage(int peer, NetDataReader reader)
     {
         var msgType = reader.PeekByte();
+        Console.WriteLine("receive " + msgType);
+
         if(msgType == (byte)MsgType1.HashMsg)
         {
             FrameHash hash = reader.Get<FrameHash>();
