@@ -215,6 +215,11 @@ public class NetProcessor
     {
         if(teamParam == TeamConnectParam.None) return;
 
+        SyncRoomInfo(peer);
+    }
+
+    void SyncRoomInfo(int peer)
+    {
         if(!_allUserRooms.TryGetValue(peer, out var room))
         {
             _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
@@ -292,11 +297,13 @@ public class NetProcessor
                 if(room1 != room)
                 {
                     room.Error(peer, RoomError.JoinRoomErrorHasRoom);
+                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
                 else
                 {
                     room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
+                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
             }
