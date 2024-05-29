@@ -376,7 +376,7 @@ public class Server
 
         if(index < 0) 
         {
-            LogFileWriter.WriteLog($"SetOnlineState not found peer {peer}");
+            ServerLog.WriteLog($"SetOnlineState not found peer {peer}");
             return;
         }
 

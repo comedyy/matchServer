@@ -271,7 +271,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         #if UNITY_EDITOR
         UnityEngine.Debug.LogError($"{str} {string.Join(",", args)}");
         #else
-        LogFileWriter.WriteLog(str, args);
+        ServerLog.WriteLog(str, args);
         #endif
     }
 
