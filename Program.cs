@@ -151,6 +151,8 @@ class Program
     static Dictionary<string, int> _dicConfigs;
     private static void Init()
     { 
+        LogFileWriter.Init();
+
         var port = GetConfigId("port", 5000);
         int uniqueIdBegin = GetConfigId("uniqueIdBegin", 40000);
         int uniqueIdEnd = GetConfigId("uniqueIdEnd", 50000);

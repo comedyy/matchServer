@@ -268,18 +268,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
 
     public void WriteNet(NetLogLevel level, string str, params object[] args)
     {
-        if(level == NetLogLevel.Error)
-        {
-            #if UNITY_EDITOR
-            UnityEngine.Debug.LogError($"{str} {string.Join(",", args)}");
-            #else
-            Console.WriteLine($"{str} {string.Join(",", args)}");
-            #endif
-        }
-        else
-        {
-            // ignore
-        }
+        #if UNITY_EDITOR
+        UnityEngine.Debug.LogError($"{str} {string.Join(",", args)}");
+        #else
+        LogFileWriter.WriteLog(str, args);
+        #endif
     }
 
     public string GetInfo()
