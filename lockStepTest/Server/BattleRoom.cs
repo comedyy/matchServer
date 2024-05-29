@@ -179,7 +179,7 @@ public class ServerBattleRoom
 
         for(int i = 0; i < _netPeers.Count; i++)
         {
-            _server.SetOnlineState(i, _netPeers[i].isOnLine);
+            _server.SetOnlineState(_netPeers[i].id, _netPeers[i].isOnLine);
         }
     }
 

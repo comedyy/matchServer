@@ -16,12 +16,13 @@ public class LogFileWriter
         Console.WriteLine($"log path:[{_logPath}]");
     }
 
-    internal static void WriteLog(string str, object[] args)
+    internal static void WriteLog(string str, params object[] args)
     {
         lock(DebugLogLock)
         {
             var content = $"\n{DateTime.Now} {str} {string.Join(",", args)}";
             File.AppendAllText(_logPath, content);
+            Console.WriteLine(content);
         }
     }
 }

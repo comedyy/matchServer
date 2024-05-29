@@ -374,7 +374,11 @@ public class Server
     {
         var index = Array.FindIndex(_playerInfos, m=>m.id == peer);
 
-        if(index < 0) return;
+        if(index < 0) 
+        {
+            LogFileWriter.WriteLog($"SetOnlineState not found peer {peer}");
+            return;
+        }
 
         _playerInfos[index].isOnLine = isOnLine;
     }
