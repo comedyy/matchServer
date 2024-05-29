@@ -143,6 +143,8 @@ namespace LiteNetLib
                         return;
                     continue;
                 }
+                
+                _watchReceiveIdles.BeginTick();
                 bool messageReceived = false;
                 if (socketv4.Available != 0 || selectReadList.Contains(socketv4))
                 {
@@ -156,6 +158,7 @@ namespace LiteNetLib
                         return;
                     messageReceived = true;
                 }
+                _watchReceiveIdles.EndTick();
 
                 selectReadList.Clear();
 
@@ -281,6 +284,8 @@ namespace LiteNetLib
                     }
                     else
                     {
+                        _watchReceiveIdles.BeginTick();
+
                         bool messageReceived = false;
                         if (socketv4.Available != 0 || selectReadList.Contains(socketv4))
                         {
@@ -293,6 +298,8 @@ namespace LiteNetLib
                             messageReceived = true;
                         }
 
+                        _watchReceiveIdles.EndTick();
+
                         selectReadList.Clear();
 
                         if (messageReceived)
@@ -301,9 +308,7 @@ namespace LiteNetLib
                         selectReadList.Add(socketv4);
                         selectReadList.Add(socketV6);
                         
-                        _watchReceiveIdles.BeginTick();
                         Socket.Select(selectReadList, null, null, ReceivePollingTime);
-                        _watchReceiveIdles.EndTick();
                     }
                     //NetDebug.Write(NetLogLevel.Trace, $"[R]Received data from {bufferEndPoint}, result: {packet.Size}");
                 }

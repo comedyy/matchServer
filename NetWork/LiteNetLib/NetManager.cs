@@ -553,6 +553,7 @@ namespace LiteNetLib
 
             while (IsRunning)
             {
+                _watchLogicIdles.BeginTick();
                 try
                 {
                     ProcessDelayedPackets();
@@ -583,13 +584,12 @@ namespace LiteNetLib
                     }
 
                     ProcessNtpRequests(elapsed);
+                    _watchLogicIdles.EndTick();
 
                     int sleepTime = UpdateTime - (int)stopwatch.ElapsedMilliseconds;
                     if (sleepTime > 0)
                     {
-                        _watchLogicIdles.BeginTick();
                         _updateTriggerEvent.WaitOne(sleepTime);
-                        _watchLogicIdles.EndTick();
                     }
                 }
                 catch (ThreadAbortException)

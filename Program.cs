@@ -72,6 +72,10 @@ class Program
             {
                 mainThreadSleepTime = 10000;
             }
+            else if(line == "netInfo")
+            {
+                LiteNetLib.NetUtils.PrintInterfaceInfos();
+            }
             else if(line == "gc")
             {
                 GC.Collect();
