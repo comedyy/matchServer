@@ -32,7 +32,6 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         _netServer.AutoRecycle = true;
         _netServer.UseNativeSockets = true;
         _netServer.UnconnectedMessagesEnabled = true;
-        _netServer.AllowPeerAddressChange = true;  // 玩家切网络自动回连
         _netServer.Start(_port);
         _netServer.UpdateTime = 15;
 
