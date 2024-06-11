@@ -1,10 +1,6 @@
 using System.Collections.Generic;
 using LiteNetLib.Utils;
 
-public class RoomMsgVersion
-{
-    public const int version = 10;
-}
 
 public enum TeamConnectParam
 {
@@ -659,19 +655,22 @@ public partial struct BroadCastMsg : INetSerializable
 
 public struct ChangeRoomInfoMsg : INetSerializable
 {
-    public byte[] bytes;
+    public byte[] bytesStartBattle;
+    public byte[] bytesRoomShowInfo;
     public bool needCancelReady;
     public void Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         needCancelReady = reader.GetBool();
-        bytes = reader.GetBytesWithLength();
+        bytesRoomShowInfo = reader.GetBytesWithLength();
+        bytesStartBattle = reader.GetBytesWithLength();
     }
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.ChangeRoomInfo);
         writer.Put(needCancelReady);
-        writer.PutBytesWithLength(bytes);
+        writer.PutBytesWithLength(bytesRoomShowInfo);
+        writer.PutBytesWithLength(bytesStartBattle);
     }
 }

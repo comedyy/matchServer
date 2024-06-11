@@ -493,7 +493,9 @@ public class ServerBattleRoom
     {
         if(Master != peer) return;
 
-        roomShowInfo = changeRoomInfoMsg.bytes;
+        roomShowInfo = changeRoomInfoMsg.bytesRoomShowInfo;
+        _startBattle = changeRoomInfoMsg.bytesStartBattle;
+        
         if(changeRoomInfoMsg.needCancelReady)
         {
             for(int i = 0; i < _netPeers.Count; i++)
