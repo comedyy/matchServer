@@ -115,6 +115,12 @@ class Program
         while (!NeedStop) // 最低50毫秒一个循环
         {
             frame ++;
+            if(frame >= 50 * 60 * 10) // 10分钟重置
+            {
+                frame = 0;
+                watch.Restart();
+            }
+
             var targetMs = frame * 50;
 
             try
