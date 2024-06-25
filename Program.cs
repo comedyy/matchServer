@@ -13,6 +13,8 @@ class Program
     static bool NeedStop;
     static int mainThreadSleepTime;
     const string appConfigFolder = "__appconfig";
+    const int _msPerFrame = 50;
+    const float _secondPerFrame = _msPerFrame / 1000f;
 
     static void Main(string[] args)
     {
@@ -104,44 +106,32 @@ class Program
     private static void ProcessLogic()
     {
         Stopwatch watch = new Stopwatch();
-        watch.Start();
 
         var msEndOfFrame = watch.ElapsedMilliseconds;
-        var msTick = 0L;
-        int frame = 0;
+        long frame = 0;
 
         ProfilerTick _watch = new ProfilerTick("Program");
 
         while (!NeedStop) // 最低50毫秒一个循环
         {
             frame ++;
-            if(frame >= 50 * 60 * 10) // 10分钟重置
-            {
-                frame = 0;
-                watch.Restart();
-            }
-
-            var targetMs = frame * 50;
+            watch.Restart();
 
             try
             {
-                _netProcessor.OnUpdate(msTick / 1000f);
+                _netProcessor.OnUpdate(_secondPerFrame);
             }
             catch(Exception e)
             {
                 Console.WriteLine(e.Message + " " + e.StackTrace); 
             }
 
-            var logicTime = (int)(watch.ElapsedMilliseconds - msEndOfFrame);
-            _watch.AddTick(logicTime, _netProcessor.GetStatus);
+            _watch.AddTick((int)watch.ElapsedMilliseconds, _netProcessor.GetStatus);
 
-            while(watch.ElapsedMilliseconds < targetMs)
+            while(watch.ElapsedMilliseconds < _msPerFrame - 1)
             {
                 Thread.Sleep(1);
             }
-
-            msTick = watch.ElapsedMilliseconds - msEndOfFrame;
-            msEndOfFrame = watch.ElapsedMilliseconds;
 
             if(frame % 1000 == 0 && _netProcessor != null)
             {
