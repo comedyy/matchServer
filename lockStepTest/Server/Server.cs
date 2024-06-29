@@ -48,6 +48,7 @@ public class Server
     double _roomTime;
     double _roomStartTime;
     int _MaxManualPauseSec;
+    bool _notSendEmptyFrameMsg;
 
     public Server(ServerSetting serverSetting, IServerGameSocket socket, List<int> netPeers, double roomTime)
     {
@@ -62,6 +63,7 @@ public class Server
         _waitFinishStageTime = serverSetting.waitFinishStageTimeMs == 0 ? 10 : serverSetting.waitFinishStageTimeMs / 1000f;
         _waitReadyStageTime = serverSetting.waitReadyStageTimeMs == 0 ? 10 : serverSetting.waitReadyStageTimeMs / 1000f;
         _MaxManualPauseSec = Math.Min(serverSetting.pauseMaxSecond, 30);
+        _notSendEmptyFrameMsg = serverSetting.notSendEmptyFrameMsg;
         _roomStartTime = roomTime;
 
         _pauseFrame = 0;
@@ -336,6 +338,11 @@ public class Server
 
     private void BroadCastMsg()
     {
+        if(_notSendEmptyFrameMsg && _frameMsgBuffer.Count == 0)
+        {
+            return;
+        }
+
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
             frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
         });
