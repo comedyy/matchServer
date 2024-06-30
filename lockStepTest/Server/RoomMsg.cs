@@ -34,6 +34,7 @@ public struct ServerSetting : INetSerializable
     public bool needJoinId;
     public byte gameId;
     public bool notSendEmptyFrameMsg;
+    public bool ingoreReady;
 
 
     public void Deserialize(NetDataReader reader)
@@ -50,6 +51,7 @@ public struct ServerSetting : INetSerializable
         needJoinId = reader.GetBool();
         gameId = reader.GetByte();
         notSendEmptyFrameMsg = reader.GetBool();
+        ingoreReady = reader.GetBool();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -65,6 +67,7 @@ public struct ServerSetting : INetSerializable
         writer.Put(needJoinId);
         writer.Put(gameId);
         writer.Put(notSendEmptyFrameMsg);
+        writer.Put(ingoreReady);
     }
 }
 

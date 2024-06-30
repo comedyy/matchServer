@@ -154,11 +154,14 @@ public class ServerBattleRoom
         if(peer != Master) return;
         if(_server != null) return;
 
-        for(int i = 1; i < _netPeers.Count; i++)
+        if(!_setting.ingoreReady)
         {
-            if(!_netPeers[i].isReady) return;
+            for(int i = 1; i < _netPeers.Count; i++)
+            {
+                if(!_netPeers[i].isReady) return;
+            }
         }
-
+        
         HasBattle = true;
         _battleCount++;
 
