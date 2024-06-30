@@ -360,25 +360,18 @@ public class NetProcessor
         }
 
         var roomId = 0;
-        if(msg.setting.needJoinId)
+        for(int i = 0; i < 10; i++)
         {
-            roomId = ++RoomId;
-        }
-        else
-        {
-            for(int i = 0; i < 10; i++)
+            roomId = (int)_serverRandom.Next(10000, 99999);
+            if(!_allRooms.ContainsKey(roomId))
             {
-                roomId = (int)_serverRandom.Next(10000, 99999);
-                if(!_allRooms.ContainsKey(roomId))
-                {
-                    break;
-                }
+                break;
             }
+        }
 
-            if(roomId == 0){
-                _serverSocket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RandomRoomIdGetError});
-                return;
-            }
+        if(roomId == 0){
+            _serverSocket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RandomRoomIdGetError});
+            return;
         }
         
         var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);

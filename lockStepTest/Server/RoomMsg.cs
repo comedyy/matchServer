@@ -31,7 +31,6 @@ public struct ServerSetting : INetSerializable
     internal byte waitFinishStageTimeMs;
     public bool keepRoomAfterBattle;
     public int pauseMaxSecond;
-    public bool needJoinId;
     public byte gameId;
     public bool notSendEmptyFrameMsg;
     public bool ingoreReady;
@@ -48,7 +47,6 @@ public struct ServerSetting : INetSerializable
         waitFinishStageTimeMs = reader.GetByte();
         keepRoomAfterBattle = reader.GetBool();
         pauseMaxSecond = reader.GetInt();
-        needJoinId = reader.GetBool();
         gameId = reader.GetByte();
         notSendEmptyFrameMsg = reader.GetBool();
         ingoreReady = reader.GetBool();
@@ -64,7 +62,6 @@ public struct ServerSetting : INetSerializable
         writer.Put(waitFinishStageTimeMs);
         writer.Put(keepRoomAfterBattle);
         writer.Put(pauseMaxSecond);
-        writer.Put(needJoinId);
         writer.Put(gameId);
         writer.Put(notSendEmptyFrameMsg);
         writer.Put(ingoreReady);
