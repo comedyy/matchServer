@@ -292,22 +292,7 @@ public class NetProcessor
     {
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
-            if(_allUserRooms.TryGetValue(peer, out var room1))  // 已经有房间
-            {
-                if(room1 != room)
-                {
-                    room.Error(peer, RoomError.JoinRoomErrorHasRoom);
-                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
-                    return;
-                }
-                else
-                {
-                    room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
-                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
-                    return;
-                }
-            }
-
+            LeaveUser(peer);
             if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0), joinRoomMsg.gameId))
             {
                 _allUserRooms[peer] = room;
@@ -351,14 +336,7 @@ public class NetProcessor
 
     void CreateRoom(int peer, CreateRoomMsg msg)
     {
-        if(_allUserRooms.ContainsKey(peer))
-        {
-            _serverSocket.SendMessage(peer, new RoomErrorCode(){
-                roomError = RoomError.CreateRoomErrorHasRoom
-            });
-            return;
-        }
-
+        LeaveUser(peer);
         var roomId = 0;
         for(int i = 0; i < 10; i++)
         {
