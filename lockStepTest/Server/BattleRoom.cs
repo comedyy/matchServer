@@ -171,7 +171,8 @@ public class ServerBattleRoom
         {
             joinMessages = _netPeers.Select(m => m.joinInfo).ToList(),
             StartMsg = _startBattle,
-            roomShowInfo = roomShowInfo
+            roomShowInfo = roomShowInfo,
+            battleCount = (short)_battleCount
         };
         _server.StartBattle(startMessage);
 
