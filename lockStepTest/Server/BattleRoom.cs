@@ -271,7 +271,7 @@ public class ServerBattleRoom
         _server = null;
         HasBattle = false;
 
-        SwitchToRoomMode(); // 战斗结束同步
+        BroadcastRoomInfo(); // 战斗结束同步
     }
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
