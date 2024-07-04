@@ -169,7 +169,8 @@ public class ServerBattleRoom
             joinMessages = _netPeers.Select(m => m.joinInfo).ToList(),
             StartMsg = _startBattle,
             roomShowInfo = roomShowInfo,
-            battleCount = (short)_battleCount
+            battleCount = (short)_battleCount,
+            BattleGuid = Guid.NewGuid().ToString()
         };
         _server.StartBattle(startMessage);
 
@@ -269,6 +270,8 @@ public class ServerBattleRoom
         _server?.Destroy();
         _server = null;
         HasBattle = false;
+
+        SwitchToRoomMode(); // 战斗结束同步
     }
 
     // public bool IsBattleEnd => _server != null && _server.IsBattleEnd;
@@ -306,6 +309,7 @@ public class ServerBattleRoom
     UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
         roomId = RoomId,
         roomShowInfo = roomShowInfo,
+        HasBattle = HasBattle,
         AIHelperIndex = (byte)_netPeers.FindIndex(m=>!m.isInNeedAiState),
         userList = _netPeers.Select(m=>new RoomUser(){userInfo = m.showInfo,
              isOnLine = m.isOnLine, isReady = m.isReady, userId = (uint)m.id, needAiHelp = m.isInNeedAiState, isRobert = m.isRobert }).ToArray()

@@ -169,6 +169,7 @@ public struct RoomStartBattleMsg : INetSerializable
     public bool isReconnect;
     public byte[] roomShowInfo;
     public short battleCount;
+    public string BattleGuid;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -184,6 +185,7 @@ public struct RoomStartBattleMsg : INetSerializable
         isReconnect = reader.GetBool();
         roomShowInfo = reader.GetBytesWithLength();
         battleCount = reader.GetShort();
+        BattleGuid = reader.GetString();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -199,6 +201,7 @@ public struct RoomStartBattleMsg : INetSerializable
         writer.Put(isReconnect);
         writer.PutBytesWithLength(roomShowInfo);
         writer.Put(battleCount);
+        writer.Put(BattleGuid);
     }
 }
 
@@ -242,6 +245,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
     public int roomId;
     public byte[] roomShowInfo;
     public byte AIHelperIndex;
+    public bool HasBattle;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -256,6 +260,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
 
         roomShowInfo = reader.GetBytesWithLength();
         AIHelperIndex = reader.GetByte();
+        HasBattle = reader.GetBool();
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
         OnDeserialize(reader);
@@ -276,6 +281,7 @@ public partial struct UpdateRoomMemberList : INetSerializable
 
         writer.PutBytesWithLength(roomShowInfo);
         writer.Put(AIHelperIndex);
+        writer.Put(HasBattle);
     }
 }
 
