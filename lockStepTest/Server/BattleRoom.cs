@@ -525,4 +525,18 @@ public class ServerBattleRoom
             }
         }
     }
+
+    internal void RobertQuitRoom(int peer, int robertId)
+    {
+        if(Master != peer) return;
+
+        foreach(var x in _netPeers)
+        {
+            if(x.id == robertId && x.isRobert)
+            {
+                RemovePeer(robertId, RoomOpt.Leave);
+                return;
+            }
+        }
+    }
 }

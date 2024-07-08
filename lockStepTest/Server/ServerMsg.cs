@@ -44,6 +44,7 @@ public enum MsgType1 : byte
     GetUniqueIdInServer = 125, // 获取服务器的唯一id。
     BroadCastMsg = 126,
     ChangeRoomInfo = 127,
+    RobertQuitRoom = 128,
 }
 
 

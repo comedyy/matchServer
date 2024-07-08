@@ -429,6 +429,25 @@ public struct KickUserMsg : INetSerializable
     }
 }
 
+
+public struct RobertQuitRoomMsg : INetSerializable
+{
+    public int robertId;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        reader.GetByte();
+        robertId = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.RobertQuitRoom);
+        writer.Put(robertId);
+    }
+}
+
+
 public struct UserLeaveRoomMsg : INetSerializable
 {
 
