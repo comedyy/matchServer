@@ -268,10 +268,7 @@ public class ServerBattleRoom
 
         for(int i = 0; i < _netPeers.Count; i++) // robert
         {
-            if(_netPeers[i].isRobert)
-            {
-                SetIsReady(_netPeers[i].id, false, roomTime + 10, false);
-            }
+            SetIsReady(_netPeers[i].id, false, roomTime + 10, false);
         }
 
         BroadcastRoomInfo(); // 战斗结束同步
