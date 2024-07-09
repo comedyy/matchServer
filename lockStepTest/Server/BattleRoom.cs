@@ -176,11 +176,6 @@ public class ServerBattleRoom
 
         for(int i = 0; i < _netPeers.Count; i++)
         {
-            SetIsReady(_netPeers[i].id, false, 0);
-        }
-
-        for(int i = 0; i < _netPeers.Count; i++)
-        {
             _server.SetOnlineState(_netPeers[i].id, _netPeers[i].isOnLine);
         }
     }
@@ -217,7 +212,7 @@ public class ServerBattleRoom
 
         if(_server != null && _server.IsBattleEnd)
         {
-            SwitchToRoomMode();
+            SwitchToRoomMode(roomTime);
         }
 
         UpdateRobertBehavior(roomTime);
@@ -259,17 +254,25 @@ public class ServerBattleRoom
                 if(roomTime - peer.onlineStateChangeTime < peer.robertDelay) continue;
                 if(roomTime - peer.readyTime < peer.robertDelay) continue;
                 
-                SetIsReady(peer.id, true, roomTime);
+                SetIsReady(peer.id, true, roomTime, true);
             }
         }
     }
 
-    private void SwitchToRoomMode()
+    private void SwitchToRoomMode(double roomTime)
     {
         Console.WriteLine($"battleEnd {RoomId}");
         _server?.Destroy();
         _server = null;
         HasBattle = false;
+
+        for(int i = 0; i < _netPeers.Count; i++) // robert
+        {
+            if(_netPeers[i].isRobert)
+            {
+                SetIsReady(_netPeers[i].id, false, roomTime + 10, false);
+            }
+        }
 
         BroadcastRoomInfo(); // 战斗结束同步
     }
@@ -358,7 +361,7 @@ public class ServerBattleRoom
         BroadcastRoomInfo();
     }
 
-    internal void SetIsReady(int peer, bool v, double readyTime)
+    internal void SetIsReady(int peer, bool v, double readyTime, bool needSync)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         var x = _netPeers[index];
@@ -366,8 +369,13 @@ public class ServerBattleRoom
         x.readyTime = readyTime;
         _netPeers[index] = x;
 
+        // Console.WriteLine($"{peer} {v}");
+
         // sync room list
-        BroadcastRoomInfo();
+        if(needSync)
+        {
+            BroadcastRoomInfo();
+        }
     }
 
     internal bool KickUser(int peer, int userId)

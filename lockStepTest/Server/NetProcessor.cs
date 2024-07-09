@@ -252,7 +252,7 @@ public class NetProcessor
     {
         if(_allUserRooms.TryGetValue(peer, out var room))
         {
-            room.SetIsReady(peer, ready.isReady, _serverTime);
+            room.SetIsReady(peer, ready.isReady, _serverTime, true);
         }
     }
 
