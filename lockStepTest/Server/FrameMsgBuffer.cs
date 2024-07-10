@@ -9,7 +9,7 @@ public class FrameMsgBuffer
     byte[] _frameBuffer = new byte[TOTAL_LENGTH]; // 接收buffer
     ushort _position;
     byte _msgCount;
-    List<byte[]> _allMessage = new List<byte[]>();
+    List<(int, byte[])> _allMessage = new List<(int, byte[])>();
 
     public void AddFromReader(NetDataReader reader)
     {
@@ -35,13 +35,17 @@ public class FrameMsgBuffer
         _position = 0;
         _msgCount = 0;
 
-        _allMessage.Add(writer.CopyData());
+        _allMessage.Add((frame, writer.CopyData()));
     }
 
     internal ServerReconnectMsgResponse GetReconnectMsg(int clientCurrentFrame, Dictionary<int, int> finishedStageFrames)
     {
         List<byte[]> list = new List<byte[]>();
-        list.AddRange(_allMessage.GetRange(clientCurrentFrame, _allMessage.Count - clientCurrentFrame));
+        var index = _allMessage.FindIndex(m=>m.Item1 > clientCurrentFrame);
+        if(index >= 0)
+        {
+            list.AddRange(_allMessage.GetRange(index, _allMessage.Count - index).Select(m=>m.Item2));
+        }
 
         ServerReconnectMsgResponse response = new ServerReconnectMsgResponse(){
             startFrame = clientCurrentFrame,

@@ -20,11 +20,13 @@ struct PlayerInfo
     public int readyStageValue;
     public double readyStageTime;
     public bool isOnLine;
+    public int receivedClientFrameId;
 }
 
 public class Server
 {
     public ushort _frame;
+    public ushort _lastBroadCastFrame;
     public float _totalSeconds;
     public float preFrameSeconds;
     float _tick;
@@ -237,6 +239,13 @@ public class Server
         }
 
         reader.GetByte(); // reader去掉msgType
+        var frame = reader.GetUShort();
+        var peerIndex = Array.FindIndex(_playerInfos, m=>m.id == peer);
+        if(peerIndex < 0 || _playerInfos[peerIndex].receivedClientFrameId >= frame)
+        {
+            return;
+        }
+    
         _frameMsgBuffer.AddFromReader(reader);
     }
 
@@ -338,11 +347,12 @@ public class Server
 
     private void BroadCastMsg()
     {
-        if(_notSendEmptyFrameMsg && _frameMsgBuffer.Count == 0)
+        if(_notSendEmptyFrameMsg && _frameMsgBuffer.Count == 0 && _frame - _lastBroadCastFrame < 10)
         {
             return;
         }
 
+        _lastBroadCastFrame = _frame;
         _socket.SendMessage(_netPeers, new ServerPackageItem(){
             frame = (ushort)_frame, clientFrameMsgList = _frameMsgBuffer
         });
