@@ -28,6 +28,7 @@ class Program
         };
         _thread.Start();
 
+        Console.WriteLine($" server msg version {RoomMsgVersion.version} ");
         Console.WriteLine(" ---------------server start------------------ ");
 
         while(!NeedStop)
