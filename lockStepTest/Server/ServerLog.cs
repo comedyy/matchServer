@@ -13,7 +13,7 @@ public class ServerLog
             Directory.CreateDirectory("log");
         }
 
-        _logPath = $"log/{DateTime.Now.ToString().Replace("/", "_").Replace(" ", "_").Replace(":", "_")}.log";
+        _logPath = $"log/error.log";
         File.WriteAllText(_logPath, "init");
 
         Console.WriteLine($"log path:[{_logPath}]");

@@ -306,7 +306,7 @@ public class ServerBattleRoom
         _socket.SendMessage(AllOnLinePeers, RoomInfo);
     }
 
-    UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
+    public UpdateRoomMemberList RoomInfo => new UpdateRoomMemberList(){
         roomId = RoomId,
         roomShowInfo = roomShowInfo,
         HasBattle = HasBattle,
@@ -330,17 +330,22 @@ public class ServerBattleRoom
         _netPeers.Clear();
     }
 
-    internal void SetUserOnLineState(int peer, bool v, double _serverTime)
+    public bool ContainUser(int peer)
+    {
+        return _netPeers.FindIndex(m=>m.id == peer) > 0;
+    }
+
+    internal bool SetUserOnLineState(int peer, bool v, double _serverTime)
     {
         var index = _netPeers.FindIndex(m=>m.id == peer);
         if(index < 0)
         {
-            return;
+            return false;
         }
         
         var x = _netPeers[index];
                 
-        if(x.isOnLine == v) return;
+        if(x.isOnLine == v) return false;
 
         x.isOnLine = v;
         x.onlineStateChangeTime = _serverTime;
@@ -356,6 +361,7 @@ public class ServerBattleRoom
 
         // sync room list
         BroadcastRoomInfo();
+        return true;
     }
 
     internal void SetIsReady(int peer, bool v, double readyTime, bool needSync)
