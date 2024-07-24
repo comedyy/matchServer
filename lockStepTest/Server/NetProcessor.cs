@@ -109,7 +109,7 @@ public class NetProcessor
         if (_allUserRooms.TryGetValue(peer, out var room))  // 已经有房间
         {
             room.RobertQuitRoom(peer, robertQuitRoomMsg.robertId);
-            _allUserRooms.Remove(peer);
+            _allUserRooms.Remove(robertQuitRoomMsg.robertId);
         }
     }
 
