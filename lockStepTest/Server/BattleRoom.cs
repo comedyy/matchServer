@@ -332,7 +332,7 @@ public class ServerBattleRoom
 
     public bool ContainUser(int peer)
     {
-        return _netPeers.FindIndex(m=>m.id == peer) > 0;
+        return _netPeers.FindIndex(m=>m.id == peer) >= 0;
     }
 
     internal bool SetUserOnLineState(int peer, bool v, double _serverTime)
