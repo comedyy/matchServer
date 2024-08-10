@@ -27,8 +27,8 @@ public struct ServerSetting : INetSerializable
     public RoomMasterLeaveOpt masterLeaveOpt;
     public WhoCanLeaveRoomInBattle whoCanLeaveRoomInBattle;
     public byte maxCount;
-    internal byte waitReadyStageTimeMs;
-    internal byte waitFinishStageTimeMs;
+    internal int waitReadyStageTimeMs;
+    internal int waitFinishStageTimeMs;
     public bool keepRoomAfterBattle;
     public int pauseMaxSecond;
     public byte gameId;
@@ -43,8 +43,8 @@ public struct ServerSetting : INetSerializable
         masterLeaveOpt = (RoomMasterLeaveOpt)reader.GetByte();
         maxCount = reader.GetByte();
 
-        waitReadyStageTimeMs = reader.GetByte();
-        waitFinishStageTimeMs = reader.GetByte();
+        waitReadyStageTimeMs = reader.GetInt();
+        waitFinishStageTimeMs = reader.GetInt();
         keepRoomAfterBattle = reader.GetBool();
         pauseMaxSecond = reader.GetInt();
         gameId = reader.GetByte();

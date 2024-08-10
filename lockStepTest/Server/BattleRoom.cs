@@ -390,7 +390,7 @@ public class ServerBattleRoom
         }
 
         // 掉线光了。
-        var time = _server != null ? 30 : 30;
+        var time = _server != null ? 60 : 60;
         var isAllOffLine = _netPeers.All(m=>!m.isOnLine && serverTime > m.onlineStateChangeTime + time);
 
         if(isAllOffLine) 
