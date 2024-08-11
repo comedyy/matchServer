@@ -34,6 +34,7 @@ public struct ServerSetting : INetSerializable
     public byte gameId;
     public bool notSendEmptyFrameMsg;
     public bool ingoreReady;
+    public int AppVersion;
 
 
     public void Deserialize(NetDataReader reader)
@@ -50,6 +51,7 @@ public struct ServerSetting : INetSerializable
         gameId = reader.GetByte();
         notSendEmptyFrameMsg = reader.GetBool();
         ingoreReady = reader.GetBool();
+        AppVersion = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -65,6 +67,7 @@ public struct ServerSetting : INetSerializable
         writer.Put(gameId);
         writer.Put(notSendEmptyFrameMsg);
         writer.Put(ingoreReady);
+        writer.Put(AppVersion);
     }
 }
 
@@ -111,6 +114,7 @@ public struct JoinRoomMsg : INetSerializable
     public byte[] joinMessage;
     public byte[] joinShowInfo;
     public byte gameId;
+    public int appVersion;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -119,6 +123,7 @@ public struct JoinRoomMsg : INetSerializable
         joinMessage = reader.GetBytesWithLength();
         joinShowInfo = reader.GetBytesWithLength();
         gameId = reader.GetByte();
+        appVersion = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -128,6 +133,7 @@ public struct JoinRoomMsg : INetSerializable
         writer.PutBytesWithLength(joinMessage);
         writer.PutBytesWithLength(joinShowInfo);
         writer.Put(gameId);
+        writer.Put(appVersion);
     }
 }
 
@@ -370,6 +376,7 @@ public enum RoomError : byte
     UpdatFailedMemberNotExist = 11,
     RandomRoomIdGetError = 12,
     GameIdNotSame = 13,
+    AppVersionError = 14,
 }
 
 public struct RoomErrorCode : INetSerializable
