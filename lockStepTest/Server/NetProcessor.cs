@@ -278,7 +278,7 @@ public class NetProcessor
         if(_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
         {
             if(room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo, 
-                new RobertStruct(true, createAutoJoinRobertMsg.readyDelay), createAutoJoinRobertMsg.joinRoomMsg.gameId, 0))
+                new RobertStruct(true, createAutoJoinRobertMsg.readyDelay), createAutoJoinRobertMsg.joinRoomMsg.gameId, createAutoJoinRobertMsg.joinRoomMsg.appVersion))
             {
                 _allUserRooms[idRobert] = room;
                 room.SetUserOnLineState(idRobert, false, _serverTime);
