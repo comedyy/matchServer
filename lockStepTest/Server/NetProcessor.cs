@@ -293,7 +293,7 @@ public class NetProcessor
         if(_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
             LeaveUser(peer);
-            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0), joinRoomMsg.gameId))
+            if(room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0), joinRoomMsg.gameId, joinRoomMsg.appVersion))
             {
                 _allUserRooms[peer] = room;
             }
