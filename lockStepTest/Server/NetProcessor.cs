@@ -74,6 +74,11 @@ public class NetProcessor
     private void OnReceiveMsg(int peer, NetDataReader reader)
     {
         var msgType = (MsgType1)reader.PeekByte();
+        if(GameServerSocket.enableLogMessage)
+        {
+            Console.WriteLine($"{peer} {msgType}");
+        }
+
         switch(msgType)
         {
             case MsgType1.CreateRoom: CreateRoom(peer, reader.Get<CreateRoomMsg>()); break;

@@ -15,6 +15,7 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
     private ushort _version;
     Dictionary<NetPeer, int> _lookupPeerToId = new Dictionary<NetPeer, int>();
     Dictionary<int, NetPeer> _lookupIdToPeer = new Dictionary<int, NetPeer>();
+    public static bool enableLogMessage = false;
 
     public GameServerSocket(int countUser, int port, ushort version)
     {
@@ -97,6 +98,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
             }
         }
 
+        if(enableLogMessage)
+        {
+            Console.WriteLine($"SendMessage {string.Join(",", list)} {t}");
+        }
+
         #if UNITY_EDITOR
         UnityEngine.Profiling.Profiler.EndSample();
         #endif
@@ -119,6 +125,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
             }
         }
 
+        if(enableLogMessage)
+        {
+            Console.WriteLine($"SendMessage {string.Join(",", list)} {t}");
+        }
+
         #if UNITY_EDITOR
         UnityEngine.Profiling.Profiler.EndSample();
         #endif
@@ -137,6 +148,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
             peer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
         }
 
+        if(enableLogMessage)
+        {
+            Console.WriteLine($"SendMessage {id} {t}");
+        }
+
         #if UNITY_EDITOR
         UnityEngine.Profiling.Profiler.EndSample();
         #endif
@@ -147,6 +163,11 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
         _dataWriter.Reset();
         _dataWriter.Put(t);
         _netServer.SendUnconnectedMessage(_dataWriter, iPEndPoint);
+
+        if(enableLogMessage)
+        {
+            Console.WriteLine($"SendUnconnectedMessage {iPEndPoint} {t}");
+        }
     }
 #endregion
 

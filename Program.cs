@@ -70,6 +70,10 @@ class Program
             {
                 ProfilerTick.EnableProfiler = !ProfilerTick.EnableProfiler;
             }
+            else if(line == "msg")
+            {
+                GameServerSocket.enableLogMessage = !GameServerSocket.enableLogMessage;
+            }
             else if(line == "wait")
             {
                 mainThreadSleepTime = 10000;
