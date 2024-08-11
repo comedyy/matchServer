@@ -94,7 +94,7 @@ public class ServerBattleRoom
 
     public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct, byte gameId, int appVersion)
     {
-        if(appVersion != _setting.AppVersion)
+        if(appVersion != _setting.AppVersion && _netPeers.Count > 0)
         {
             _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.AppVersionError});
             return false;
