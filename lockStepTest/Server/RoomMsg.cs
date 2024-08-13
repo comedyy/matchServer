@@ -695,12 +695,14 @@ public struct QueryBattleResultRequest : INetSerializable
 
     public void Deserialize(NetDataReader reader)
     {
+        var msgType = reader.GetByte();
         battleId = reader.GetInt();
         roomId = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
     {
+        writer.Put((byte)MsgType1.QueryBattleResult);
         writer.Put(battleId);
         writer.Put(roomId);
     }
@@ -716,17 +718,22 @@ public enum QueryBattleResultState : byte
 
 public struct QueryBattleResultMsg : INetSerializable
 {
+    public int roomId;
     public int battleResult;
     public QueryBattleResultState state;
     
     public void Deserialize(NetDataReader reader)
     {
+        var msgType = reader.GetByte();
+        roomId = reader.GetInt();
         battleResult = reader.GetInt();
         state = (QueryBattleResultState)reader.GetByte();
     }
 
     public void Serialize(NetDataWriter writer)
     {
+        writer.Put((byte)MsgType1.QueryBattleResult);
+        writer.Put(roomId);
         writer.Put(battleResult);
         writer.Put((byte)state);
     }

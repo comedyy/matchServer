@@ -75,7 +75,7 @@ public class NetProcessor
             var msg = reader.Get<QueryBattleResultRequest>();
             (int battleResult, QueryBattleResultState state) = GetBattleState(msg.battleId, msg.roomId);
             _serverSocket.SendUnconnectedMessage(point, new QueryBattleResultMsg(){
-                battleResult = battleResult, state = state
+                battleResult = battleResult, state = state, roomId = msg.roomId
             });
         }
     }
