@@ -25,6 +25,7 @@ public class NetProcessor
     IServerGameSocket _serverSocket;
     UniqueIdGenerator _generator;
     Random _serverRandom;
+    ServerBattleResultCollection _battleResultCollection = new ServerBattleResultCollection();
 
     public NetProcessor(IServerGameSocket socket, int initRoomId, KeyValuePair<int, int> IdRange)
     {
@@ -69,15 +70,42 @@ public class NetProcessor
                 count = count
             });
         }
+        else if(msgType == MsgType1.QueryBattleResult)
+        {
+            var msg = reader.Get<QueryBattleResultRequest>();
+            (int battleResult, QueryBattleResultState state) = GetBattleState(msg.battleId, msg.roomId);
+            _serverSocket.SendUnconnectedMessage(point, new QueryBattleResultMsg(){
+                battleResult = battleResult, state = state
+            });
+        }
+    }
+
+    private (int battleResult, QueryBattleResultState state) GetBattleState(int battleId, int roomId)
+    {
+        if(_allRooms.TryGetValue(roomId, out var room))
+        {
+            if(room.IsInBattle(battleId))
+            {
+                return (0, QueryBattleResultState.BattleNotEnd);
+            }
+        }
+
+        // find in record
+        if(_battleResultCollection.GetResult(battleId, out var result))
+        {
+            return (result, QueryBattleResultState.OK);
+        }
+
+        return (0, QueryBattleResultState.BattleResultNotFound);
     }
 
     private void OnReceiveMsg(int peer, NetDataReader reader)
     {
         var msgType = (MsgType1)reader.PeekByte();
-        if(GameServerSocket.enableLogMessage)
-        {
-            Console.WriteLine($"{peer} {msgType}");
-        }
+        // if(GameServerSocket.enableLogMessage)
+        // {
+        //     Console.WriteLine($"{peer} {msgType}");
+        // }
 
         switch(msgType)
         {
@@ -321,7 +349,7 @@ public class NetProcessor
 
         var msg = createAutoCreateRoomRobertMsg.createRoomMsg;
         var roomId = ++RoomId;
-        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRobert(new CreateAutoJoinRobertMsg(){
@@ -357,7 +385,7 @@ public class NetProcessor
             return;
         }
         
-        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting, _serverRandom);
+        var room = new ServerBattleRoom(roomId, msg.roomShowInfo, msg.startBattleMsg,  _serverSocket, msg.setting);
         _allRooms.Add(roomId, room);
 
         JoinRoom(peer, new JoinRoomMsg(){
@@ -378,7 +406,18 @@ public class NetProcessor
             x.Update(deltaTime, _serverTime);
         }
 
+        foreach(var x in _allRooms.Values)
+        {
+            var isEnd = x.UpdateServerResult(out var battleResult, out var battleId);
+            if(isEnd && battleResult != 0)
+            {
+                _battleResultCollection.AddBattleResult(battleId, battleResult, _serverTime);
+            }
+        }
+
         CheckClearRoom();
+
+        _battleResultCollection.Update(_serverTime);
     }
     double _lastClearRoomTime = 0;
 

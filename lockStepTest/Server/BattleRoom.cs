@@ -60,8 +60,7 @@ public class ServerBattleRoom
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting;
-    private Random _serverRandom;
-    int _battleCount = 0;
+    static int _serverBattleId;
 
     int MaxRoomUsers
     {
@@ -82,14 +81,13 @@ public class ServerBattleRoom
     }
 
 
-    public ServerBattleRoom(int id, byte[] roomShowInfo, byte[] startBattle, IServerGameSocket socket, ServerSetting setting, Random serverRandom)
+    public ServerBattleRoom(int id, byte[] roomShowInfo, byte[] startBattle, IServerGameSocket socket, ServerSetting setting)
     {
         this.roomShowInfo = roomShowInfo;
         RoomId = id;
         _startBattle = startBattle;
         _socket = socket;
         _setting = setting;
-        this._serverRandom = serverRandom;
     }
 
     public bool AddPeer(int peer, byte[] joinMessage, byte[] joinShowInfo, RobertStruct robertStruct, byte gameId, int appVersion)
@@ -169,7 +167,7 @@ public class ServerBattleRoom
         }
         
         HasBattle = true;
-        _battleCount++;
+        _serverBattleId++;
 
         _server = new Server(_setting, _socket, AllPeers.ToList(), serverTime);
 
@@ -178,7 +176,7 @@ public class ServerBattleRoom
             joinMessages = _netPeers.Select(m => m.joinInfo).ToList(),
             StartMsg = _startBattle,
             roomShowInfo = roomShowInfo,
-            battleCount = (short)_battleCount
+            serverBattleId = _serverBattleId
         };
         _server.StartBattle(startMessage);
 
@@ -223,12 +221,23 @@ public class ServerBattleRoom
         UnityEngine.Profiling.Profiler.EndSample();
         #endif
 
-        if(_server != null && _server.IsBattleEnd)
-        {
-            SwitchToRoomMode();
-        }
 
         UpdateRobertBehavior(roomTime);
+    }
+
+    public bool UpdateServerResult(out int battleResult, out int battleId)
+    {
+        if(_server != null && _server.IsBattleEnd)
+        {
+            battleResult = _server.BattleResult;
+            battleId = _server._startMessage.serverBattleId;
+            SwitchToRoomMode();
+            return true;
+        }
+
+        battleResult = 0;
+        battleId = 0;
+        return false;
     }
 
     private void UpdateRobertBehavior(double roomTime)
@@ -404,11 +413,11 @@ public class ServerBattleRoom
             return RoomEndReason.AllPeerOffLine;
         }
 
-        // 战斗结束了。
-        if(_server == null && _battleCount > 0 && !_setting.keepRoomAfterBattle)
-        {
-            return RoomEndReason.BattleEnd;
-        }
+        // // 战斗结束了。
+        // if(_server == null && _battleCount > 0 && !_setting.keepRoomAfterBattle)
+        // {
+        //     return RoomEndReason.BattleEnd;
+        // }
 
         // 玩家暂停太久，100秒。
         // if(_server != null && _server._pauseFrame != int.MaxValue && (serverTime - _server.UserPauseTime) > 100)
@@ -529,5 +538,10 @@ public class ServerBattleRoom
                 }
             }
         }
+    }
+
+    internal bool IsInBattle(int battleId)
+    {
+        return _server != null && _server._startMessage.serverBattleId == battleId;
     }
 }

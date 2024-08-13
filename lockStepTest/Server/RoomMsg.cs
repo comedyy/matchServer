@@ -177,7 +177,7 @@ public struct RoomStartBattleMsg : INetSerializable
     public List<byte[]> joinMessages;
     public bool isReconnect;
     public byte[] roomShowInfo;
-    public short battleCount;
+    public int serverBattleId;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -192,7 +192,7 @@ public struct RoomStartBattleMsg : INetSerializable
         }
         isReconnect = reader.GetBool();
         roomShowInfo = reader.GetBytesWithLength();
-        battleCount = reader.GetShort();
+        serverBattleId = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -207,7 +207,7 @@ public struct RoomStartBattleMsg : INetSerializable
         }
         writer.Put(isReconnect);
         writer.PutBytesWithLength(roomShowInfo);
-        writer.Put(battleCount);
+        writer.Put(serverBattleId);
     }
 }
 
@@ -685,5 +685,49 @@ public struct ChangeRoomInfoMsg : INetSerializable
         writer.Put(needCancelReady);
         writer.PutBytesWithLength(bytesRoomShowInfo);
         writer.PutBytesWithLength(bytesStartBattle);
+    }
+}
+
+public struct QueryBattleResultRequest : INetSerializable
+{
+    public int battleId;
+    public int roomId;
+
+    public void Deserialize(NetDataReader reader)
+    {
+        battleId = reader.GetInt();
+        roomId = reader.GetInt();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put(battleId);
+        writer.Put(roomId);
+    }
+}
+
+
+public enum QueryBattleResultState : byte
+{
+    OK,
+    BattleNotEnd,
+    BattleResultNotFound,
+}
+
+public struct QueryBattleResultMsg : INetSerializable
+{
+    public int battleResult;
+    public QueryBattleResultState state;
+    
+    public void Deserialize(NetDataReader reader)
+    {
+        battleResult = reader.GetInt();
+        state = (QueryBattleResultState)reader.GetByte();
+    }
+
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put(battleResult);
+        writer.Put((byte)state);
     }
 }

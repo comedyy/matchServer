@@ -44,6 +44,7 @@ public enum MsgType1 : byte
     GetUniqueIdInServer = 125, // 获取服务器的唯一id。
     BroadCastMsg = 126,
     ChangeRoomInfo = 127,
+    QueryBattleResult = 128,
 }
 
 
@@ -78,17 +79,20 @@ public struct FrameHash : INetSerializable
 public struct FinishRoomMsg : INetSerializable
 {
     public int stageValue;
+    public int battleResult;
 
     void INetSerializable.Serialize(NetDataWriter writer)
     {
         writer.Put((byte)MsgType1.FinishCurrentStage);
         writer.Put(stageValue);
+        writer.Put(battleResult);
     }
 
     void INetSerializable.Deserialize(NetDataReader reader)
     {
         var msgType = reader.GetByte();
         stageValue = reader.GetInt();
+        battleResult = reader.GetInt();
     }
 }
 

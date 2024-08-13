@@ -21,6 +21,8 @@ struct PlayerInfo
     public double readyStageTime;
     public bool isOnLine;
     public int receivedClientFrameId;
+
+    public int battleResult;
 }
 
 public class Server
@@ -209,6 +211,7 @@ public class Server
 
             _playerInfos[index].finishedStageValue = finishedStageValue;
             _playerInfos[index].finishStageTime = _roomTime;
+            _playerInfos[index].battleResult = ready.battleResult;
 
             UpdateFinishRoom();
             
@@ -401,4 +404,5 @@ public class Server
     }
 
     public bool IsBattleEnd => _gameState == GameState.End;
+    public int BattleResult => _playerInfos.Length > 0 ? _playerInfos.Max(m=>m.battleResult) : 0;
 }
