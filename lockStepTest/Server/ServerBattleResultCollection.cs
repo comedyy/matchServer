@@ -42,14 +42,13 @@ public class ServerBattleResultCollection
         for(int i = 0; i < checkCount; i++)
         {
             var x = _queue.Peek();
-            if(timeNow > x.addTime + 60)
+            var timeout = timeNow > x.addTime + 60;
+            if(timeout)
             {
-                break;
+                _queue.Dequeue();
+                _query.Remove(x.battleId);
+                removeCount++;
             }
-
-            _queue.Dequeue();
-            _query.Remove(x.battleId);
-            removeCount++;
         }
 
 #if UNITY_EDITOR || UNITY_IOS || UNITY_ANDROID
