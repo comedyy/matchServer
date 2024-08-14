@@ -232,6 +232,7 @@ public class ServerBattleRoom
             battleResult = _server.BattleResult;
             battleId = _server._startMessage.serverBattleId;
             SwitchToRoomMode();
+            Console.WriteLine($"{battleResult} {battleId}");
             return true;
         }
 

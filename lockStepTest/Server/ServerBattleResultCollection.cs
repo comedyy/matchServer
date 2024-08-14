@@ -24,6 +24,8 @@ public class ServerBattleResultCollection
 
     public bool GetResult(int battleId, out int result)
     {
+        Console.WriteLine($"---- {battleId} {_query.Count}");
+
         return _query.TryGetValue(battleId, out result);
     }
 

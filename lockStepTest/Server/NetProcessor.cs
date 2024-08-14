@@ -82,6 +82,7 @@ public class NetProcessor
 
     private (int battleResult, QueryBattleResultState state) GetBattleState(int battleId, int roomId)
     {
+        Console.WriteLine($"===={battleId} {roomId}");
         if(_allRooms.TryGetValue(roomId, out var room))
         {
             if(room.IsInBattle(battleId))
@@ -409,6 +410,7 @@ public class NetProcessor
         foreach(var x in _allRooms.Values)
         {
             var isEnd = x.UpdateServerResult(out var battleResult, out var battleId);
+            Console.WriteLine($"{isEnd} {battleResult} {battleId}");
             if(isEnd && battleResult != 0)
             {
                 _battleResultCollection.AddBattleResult(battleId, battleResult, _serverTime);
