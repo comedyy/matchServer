@@ -600,6 +600,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
     public JoinRoomMsg joinRoomMsg;
     internal int idRobert;
     internal int readyDelay;
+    public bool autoLeaveWhenBattleEnd;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -607,6 +608,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
         joinRoomMsg = reader.Get<JoinRoomMsg>();
         idRobert = reader.GetInt();
         readyDelay = reader.GetInt();
+        autoLeaveWhenBattleEnd = reader.GetBool();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -615,6 +617,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
         writer.Put(joinRoomMsg);
         writer.Put(idRobert);
         writer.Put(readyDelay);
+        writer.Put(autoLeaveWhenBattleEnd);
     }
 }
 

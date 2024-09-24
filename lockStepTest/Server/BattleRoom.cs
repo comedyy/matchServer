@@ -9,11 +9,13 @@ public struct RobertStruct
 {
     public bool isRobert;
     public int robertDelay;
+    public bool autoLeaveWhenBattleEnd;
 
-    public RobertStruct(bool isRobert, int robertDelay)
+    public RobertStruct(bool isRobert, int robertDelay, bool autoLeaveWhenBattleEnd)
     {
         this.isRobert = isRobert;
         this.robertDelay = robertDelay;
+        this.autoLeaveWhenBattleEnd = autoLeaveWhenBattleEnd;
     }
 }
 
@@ -29,6 +31,7 @@ public struct RoomMemberInfo
     public bool isRobert; // 是否是机器人
     public int robertDelay; // 机器人延迟。
     public double readyTime;
+    public bool autoLeaveWhenBattleEnd;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
     {
@@ -39,6 +42,7 @@ public struct RoomMemberInfo
         this.isInNeedAiState = false;
         this.isRobert = robertStruct.isRobert;
         this.robertDelay = robertStruct.robertDelay;
+        this.autoLeaveWhenBattleEnd = robertStruct.autoLeaveWhenBattleEnd;
     }
 }
 
@@ -269,6 +273,14 @@ public class ServerBattleRoom
         for(int i = 0; i < _netPeers.Count; i++) // robert
         {
             SetIsReady(_netPeers[i].id, false, roomTime + 10, false);
+        }
+
+        for (int i = _netPeers.Count - 1; i >= 0 ; i--)
+        {
+            if(_netPeers[i].autoLeaveWhenBattleEnd)
+            {
+                RemovePeer(i, RoomOpt.Leave);
+            }
         }
 
         BroadcastRoomInfo(); // 战斗结束同步
