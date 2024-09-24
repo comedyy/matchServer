@@ -279,7 +279,7 @@ public class ServerBattleRoom
         {
             if(_netPeers[i].autoLeaveWhenBattleEnd)
             {
-                RemovePeer(i, RoomOpt.Leave);
+                RemovePeer(_netPeers[i].id, RoomOpt.Leave);
             }
         }
 
