@@ -10,12 +10,14 @@ public struct RobertStruct
     public bool isRobert;
     public int robertDelay;
     public bool autoLeaveWhenBattleEnd;
+    public int playerIdWhichCannotStayTogether;
 
-    public RobertStruct(bool isRobert, int robertDelay, bool autoLeaveWhenBattleEnd)
+    public RobertStruct(bool isRobert, int robertDelay, bool autoLeaveWhenBattleEnd, int playerIdWhichCannotStayTogether)
     {
         this.isRobert = isRobert;
         this.robertDelay = robertDelay;
         this.autoLeaveWhenBattleEnd = autoLeaveWhenBattleEnd;
+        this.playerIdWhichCannotStayTogether = playerIdWhichCannotStayTogether;
     }
 }
 
@@ -32,6 +34,7 @@ public struct RoomMemberInfo
     public int robertDelay; // 机器人延迟。
     public double readyTime;
     public bool autoLeaveWhenBattleEnd;
+    public int playerIdWhichCannotStayTogether;
 
     public RoomMemberInfo(int peer, byte[] joinMessage, byte[] showInfo, RobertStruct robertStruct) : this()
     {
@@ -43,6 +46,7 @@ public struct RoomMemberInfo
         this.isRobert = robertStruct.isRobert;
         this.robertDelay = robertStruct.robertDelay;
         this.autoLeaveWhenBattleEnd = robertStruct.autoLeaveWhenBattleEnd;
+        this.playerIdWhichCannotStayTogether = robertStruct.playerIdWhichCannotStayTogether;
     }
 }
 
@@ -109,6 +113,33 @@ public class ServerBattleRoom
         {
             _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RoomHasInBattle});
             return false;
+        }
+
+        if(robertStruct.isRobert)
+        {
+            if(robertStruct.playerIdWhichCannotStayTogether != 0)
+            {
+                foreach(var x in _netPeers)
+                {
+                    if(x.id == robertStruct.playerIdWhichCannotStayTogether)
+                    {
+                        _socket.SendMessage(AllOnLinePeers, new RoomErrorCode(){ roomError = RoomError.RobertPlayerIdWhichCannotStayTogether});
+                        return false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < _netPeers.Count; i++)
+            {
+                var x = _netPeers[i];
+                if(x.playerIdWhichCannotStayTogether == peer)
+                {
+                    KickUser(Master, x.id);
+                    _socket.SendMessage(AllOnLinePeers, new RoomErrorCode(){ roomError = RoomError.RobertPlayerIdWhichCannotStayTogetherBeKick});
+                }
+            }
         }
 
         var index = _netPeers.FindIndex(m=>m.id == peer);

@@ -310,7 +310,7 @@ public class NetProcessor
         if (_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
         {
             if (room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo,
-                new RobertStruct(true, createAutoJoinRobertMsg.readyDelay, createAutoJoinRobertMsg.autoLeaveWhenBattleEnd), createAutoJoinRobertMsg.joinRoomMsg.gameId))
+                new RobertStruct(true, createAutoJoinRobertMsg.readyDelay, createAutoJoinRobertMsg.autoLeaveWhenBattleEnd, createAutoJoinRobertMsg.PlayerIdWhichCannotStayTogether), createAutoJoinRobertMsg.joinRoomMsg.gameId))
             {
                 _allUserRooms[idRobert] = room;
                 room.SetUserOnLineState(idRobert, false, _serverTime);
@@ -340,7 +340,7 @@ public class NetProcessor
                 }
             }
 
-            if (room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0, false), joinRoomMsg.gameId))
+            if (room.AddPeer(peer, joinRoomMsg.joinMessage, joinRoomMsg.joinShowInfo, new RobertStruct(false, 0, false, 0), joinRoomMsg.gameId))
             {
                 _allUserRooms[peer] = room;
             }

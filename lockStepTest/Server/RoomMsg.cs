@@ -373,6 +373,8 @@ public enum RoomError : byte
     UpdatFailedMemberNotExist = 11,
     RandomRoomIdGetError = 12,
     GameIdNotSame = 13,
+    RobertPlayerIdWhichCannotStayTogether = 14,
+    RobertPlayerIdWhichCannotStayTogetherBeKick = 15,
 }
 
 public struct RoomErrorCode : INetSerializable
@@ -601,6 +603,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
     internal int idRobert;
     internal int readyDelay;
     public bool autoLeaveWhenBattleEnd;
+    public int PlayerIdWhichCannotStayTogether;
 
     public void Deserialize(NetDataReader reader)
     {
@@ -609,6 +612,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
         idRobert = reader.GetInt();
         readyDelay = reader.GetInt();
         autoLeaveWhenBattleEnd = reader.GetBool();
+        PlayerIdWhichCannotStayTogether = reader.GetInt();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -618,6 +622,7 @@ public struct CreateAutoJoinRobertMsg : INetSerializable
         writer.Put(idRobert);
         writer.Put(readyDelay);
         writer.Put(autoLeaveWhenBattleEnd);
+        writer.Put(PlayerIdWhichCannotStayTogether);
     }
 }
 
