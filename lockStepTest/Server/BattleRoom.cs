@@ -131,7 +131,7 @@ public class ServerBattleRoom
         }
         else
         {
-            for (int i = 0; i < _netPeers.Count; i++)
+            for (int i = _netPeers.Count - 1; i >= 0 ; i--)
             {
                 var x = _netPeers[i];
                 if(x.playerIdWhichCannotStayTogether == peer)
