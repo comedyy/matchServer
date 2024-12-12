@@ -53,7 +53,7 @@ public struct RoomMemberInfo
 public class ServerBattleRoom
 {
     Server _server;
-    List<RoomMemberInfo> _netPeers = new List<RoomMemberInfo>();
+    public List<RoomMemberInfo> _netPeers = new List<RoomMemberInfo>();
     public int RoomId{get; private set;}
     public int MemberCount => _netPeers.Count;
     byte[] _startBattle;
@@ -113,33 +113,6 @@ public class ServerBattleRoom
         {
             _socket.SendMessage(peer, new RoomErrorCode(){ roomError = RoomError.RoomHasInBattle});
             return false;
-        }
-
-        if(robertStruct.isRobert)
-        {
-            if(robertStruct.playerIdWhichCannotStayTogether != 0)
-            {
-                foreach(var x in _netPeers)
-                {
-                    if(x.id == robertStruct.playerIdWhichCannotStayTogether)
-                    {
-                        _socket.SendMessage(AllOnLinePeers, new RoomErrorCode(){ roomError = RoomError.RobertPlayerIdWhichCannotStayTogether});
-                        return false;
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (int i = _netPeers.Count - 1; i >= 0 ; i--)
-            {
-                var x = _netPeers[i];
-                if(x.playerIdWhichCannotStayTogether == peer)
-                {
-                    KickUser(Master, x.id);
-                    _socket.SendMessage(AllOnLinePeers, new RoomErrorCode(){ roomError = RoomError.RobertPlayerIdWhichCannotStayTogetherBeKick});
-                }
-            }
         }
 
         var index = _netPeers.FindIndex(m=>m.id == peer);

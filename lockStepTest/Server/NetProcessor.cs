@@ -309,6 +309,19 @@ public class NetProcessor
 
         if (_allRooms.TryGetValue(createAutoJoinRobertMsg.joinRoomMsg.roomId, out var room))
         {
+            var excludePlayerId = createAutoJoinRobertMsg.PlayerIdWhichCannotStayTogether;    // 检测是否有特殊玩家在，如果在机器人无法加入。
+            if(excludePlayerId != 0)
+            {
+                foreach(var x in room._netPeers)
+                {
+                    if(x.id == excludePlayerId)
+                    {
+                        room.Error(room.Master, RoomError.RobertPlayerIdWhichCannotStayTogether);
+                        return;
+                    }
+                }
+            }
+
             if (room.AddPeer(idRobert, createAutoJoinRobertMsg.joinRoomMsg.joinMessage, createAutoJoinRobertMsg.joinRoomMsg.joinShowInfo,
                 new RobertStruct(true, createAutoJoinRobertMsg.readyDelay, createAutoJoinRobertMsg.autoLeaveWhenBattleEnd, createAutoJoinRobertMsg.PlayerIdWhichCannotStayTogether), createAutoJoinRobertMsg.joinRoomMsg.gameId))
             {
@@ -337,6 +350,16 @@ public class NetProcessor
                     room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
                     SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
                     return;
+                }
+            }
+
+            for (int i = room._netPeers.Count - 1; i >= 0 ; i--)       // 判断是否有特殊机器人在，如果在，把它踢掉。
+            {
+                var x = room._netPeers[i];
+                if(x.playerIdWhichCannotStayTogether == peer)
+                {
+                    KickUser(room.Master, new KickUserMsg(){ userId = x.id});
+                    room.Error(room.Master, RoomError.RobertPlayerIdWhichCannotStayTogetherBeKick);
                 }
             }
 
