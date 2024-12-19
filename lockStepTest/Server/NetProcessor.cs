@@ -243,20 +243,19 @@ public class NetProcessor
             return;
         }
 
-        if(room.SetUserOnLineState(peer, true, _serverTime))
+        room.SetUserOnLineState(peer, true, _serverTime);
+        
+        if(room.ContainUser(peer))
         {
-            if(room.ContainUser(peer))
-            {
-                _serverSocket.SendMessage(peer, room.RoomInfo);
-            }
-            else
-            {
-                _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
-                // Exception, user not in room;
-                _allUserRooms.Remove(peer);
-    
-                ServerLog.WriteLog($"found user not in room {peer}");
-            }
+            _serverSocket.SendMessage(peer, room.RoomInfo);
+        }
+        else    // 正常不会走这里。
+        {
+            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
+            // Exception, user not in room;
+            _allUserRooms.Remove(peer);
+            ServerLog.WriteLog($"found user not in room {peer}");
+            return;
         }
         
         room.SendReconnectBattleMsg(peer);

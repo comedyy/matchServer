@@ -227,6 +227,16 @@ public class GameServerSocket : IServerGameSocket, INetEventListener, INetLogger
             if(msgType == MsgType1.SetUserId)
             {
                 var msg = reader.Get<RoomUserIdMsg>();
+                if(_lookupIdToPeer.TryGetValue(msg.userId, out var prePeer) && prePeer != peer)
+                {
+                    NetDataWriter writer = new NetDataWriter();
+                    writer.Put((byte)ConnectErrorCode.ConnectionIdOccupy);
+                    prePeer.Disconnect(writer);
+
+                    _lookupIdToPeer.Remove(msg.userId);
+                    _lookupPeerToId.Remove(prePeer);
+                }
+
                 _lookupIdToPeer[msg.userId] = peer;
                 _lookupPeerToId[peer] = msg.userId;
 

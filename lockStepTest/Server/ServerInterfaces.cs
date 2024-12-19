@@ -42,4 +42,5 @@ public enum ConnectErrorCode : byte
     None,
     ConnectMax = 1,
     ConnectVersion = 2,
+    ConnectionIdOccupy = 3, // 被顶号
 }
