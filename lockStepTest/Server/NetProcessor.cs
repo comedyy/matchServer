@@ -195,7 +195,14 @@ public class NetProcessor
         GetUserStateMsg.UserState state = GetUserStateMsg.UserState.None;
         if (_allUserRooms.TryGetValue(peerId, out var room))
         {
-            state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
+            if(room.IsInClientBattleRobert)
+            {
+                return GetUserStateMsg.UserState.None;
+            }
+            else
+            {
+                state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
+            }
         }
 
         return state;
