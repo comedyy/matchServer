@@ -65,6 +65,9 @@ public class ServerBattleRoom
     public int Master => _netPeers[0].id;
     public IEnumerable<int> AllPeers => _netPeers.Select(m=>m.id);
     public IEnumerable<int> AllOnLinePeers => _netPeers.Where(m=>m.isOnLine).Select(m=>m.id);
+    public bool IsInClientBattleRobert => HasBattle 
+                                          && _setting.ifAllRobertRunInClient
+                                          && _netPeers.Count(m=>m.isRobert) == _netPeers.Count - 1;
 
     const int MAX_USER_COUNT = 10;
     ServerSetting _setting;

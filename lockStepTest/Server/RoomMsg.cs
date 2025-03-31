@@ -5,7 +5,8 @@ using LiteNetLib.Utils;
 public enum TeamConnectParam
 {
     None,
-    SyncInfo,
+    SyncInfoWhenClientOutsideRoom,
+    SyncInfoInRoom,
 }
 
 public enum RoomMasterLeaveOpt
@@ -33,6 +34,7 @@ public struct ServerSetting : INetSerializable
     public int pauseMaxSecond;
     public bool needJoinId;
     public byte gameId;
+    public bool ifAllRobertRunInClient;
 
 
     public void Deserialize(NetDataReader reader)
@@ -48,6 +50,7 @@ public struct ServerSetting : INetSerializable
         pauseMaxSecond = reader.GetInt();
         needJoinId = reader.GetBool();
         gameId = reader.GetByte();
+        ifAllRobertRunInClient = reader.GetBool();
     }
 
     public void Serialize(NetDataWriter writer)
@@ -62,6 +65,7 @@ public struct ServerSetting : INetSerializable
         writer.Put(pauseMaxSecond);
         writer.Put(needJoinId);
         writer.Put(gameId);
+        writer.Put(ifAllRobertRunInClient);
     }
 }
 

@@ -1,4 +1,4 @@
 public class RoomMsgVersion
 {
-    public const int version = 22;
+    public const int version = 27;
 }

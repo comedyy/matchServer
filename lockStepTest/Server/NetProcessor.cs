@@ -14,6 +14,7 @@ public enum RoomEndReason
     AllPeerLeave,
     AllPeerOffLine,
     UserPauseTooLongException,
+    ClientBattleReconnect
 }
 
 public class NetProcessor
@@ -232,14 +233,22 @@ public class NetProcessor
     {
         if (teamParam == TeamConnectParam.None) return;
 
-        SyncRoomInfo(peer);
+        SyncRoomInfo(peer, teamParam == TeamConnectParam.SyncInfoWhenClientOutsideRoom);
     }
 
-    void SyncRoomInfo(int peer)
+    void SyncRoomInfo(int peer, bool isClientOutSideRoom)
     {
         if (!_allUserRooms.TryGetValue(peer, out var room))
         {
             _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
+            return;
+        }
+
+        // 如果是客户端战斗（通过机器人判断），服务器已经在战斗了，客户端掉线了。
+        if(isClientOutSideRoom && room.IsInClientBattleRobert)
+        {
+            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
+            RemoveRoom(room, RoomEndReason.AllPeerLeave);
             return;
         }
 
@@ -341,13 +350,13 @@ public class NetProcessor
                 if (room1 != room)
                 {
                     room.Error(peer, RoomError.JoinRoomErrorHasRoom);
-                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
+                    SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
                 else
                 {
                     room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
-                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
+                    SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
             }
@@ -422,7 +431,7 @@ public class NetProcessor
                 roomError = RoomError.CreateRoomErrorHasRoom
             });
             
-            SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
+            SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
             return;
         }
 

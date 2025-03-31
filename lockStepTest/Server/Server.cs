@@ -233,6 +233,11 @@ public class Server
             _socket.SendMessage(_netPeers, pause);
             return;
         }
+        else if(msgType == (byte)MsgType1.ClientForceEndBattle)
+        {
+            _gameState = GameState.End;
+            return;
+        }
 
         reader.GetByte(); // reader去掉msgType
         _frameMsgBuffer.AddFromReader(reader);
@@ -352,8 +357,11 @@ public class Server
 
         _gameState = GameState.Running;
         
-        _socket.SendMessage(_netPeers, startMessage);
-        _startMessage = startMessage;
+        if(startMessage.StartMsg != null)
+        {
+            _socket.SendMessage(_netPeers, startMessage);
+            _startMessage = startMessage;
+        }
     }
 
     public void RemovePeer(int peer)

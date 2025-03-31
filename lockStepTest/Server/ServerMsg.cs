@@ -15,6 +15,7 @@ public enum MsgType1 : byte
     ServerEnterLoading = 10,  // 完成当前的stage小关, 服务器回包
     Unsync = 11,
     ServerReConnect = 12,
+    ClientForceEndBattle = 13,
     ServerMsgEnd___ = 100, // 服务器消息最后
 
     CreateRoom = 101,
@@ -233,6 +234,19 @@ public struct ServerReconnectMsg : INetSerializable
     {
         var msgType = reader.GetByte();
         startFrame = reader.GetInt();
+    }
+}
+
+public struct ClientForceEndBattle : INetSerializable
+{
+    void INetSerializable.Serialize(NetDataWriter writer)
+    {
+        writer.Put((byte)MsgType1.ClientForceEndBattle);
+    }
+
+    void INetSerializable.Deserialize(NetDataReader reader)
+    {
+        var msgType = reader.GetByte();
     }
 }
 
