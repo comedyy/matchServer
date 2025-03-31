@@ -58,6 +58,7 @@ public class NetProcessor
         else if (msgType == MsgType1.GetUserState)
         {
             var userId = reader.Get<GetUserStateMsg>().userId;
+            RemoveRoomIfPossible(userId);
             var state = GetUserState(userId);
             var msg = new GetUserStateMsg() { userId = userId, state = state };
             _serverSocket.SendUnconnectedMessage(point, msg);
@@ -195,14 +196,7 @@ public class NetProcessor
         GetUserStateMsg.UserState state = GetUserStateMsg.UserState.None;
         if (_allUserRooms.TryGetValue(peerId, out var room))
         {
-            if(room.IsInClientBattleRobert)
-            {
-                return GetUserStateMsg.UserState.None;
-            }
-            else
-            {
-                state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
-            }
+            state = room.HasBattle ? GetUserStateMsg.UserState.HasBattle : GetUserStateMsg.UserState.HasRoom;
         }
 
         return state;
@@ -240,22 +234,32 @@ public class NetProcessor
     {
         if (teamParam == TeamConnectParam.None) return;
 
-        SyncRoomInfo(peer, teamParam == TeamConnectParam.SyncInfoWhenClientOutsideRoom);
+        if(teamParam == TeamConnectParam.SyncInfoWhenClientOutsideRoom)
+        {
+            RemoveRoomIfPossible(peer);
+        }
+        SyncRoomInfo(peer);
     }
 
-    void SyncRoomInfo(int peer, bool isClientOutSideRoom)
+    void RemoveRoomIfPossible(int peer)
     {
         if (!_allUserRooms.TryGetValue(peer, out var room))
         {
-            _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
             return;
         }
 
         // 如果是客户端战斗（通过机器人判断），服务器已经在战斗了，客户端掉线了。
-        if(isClientOutSideRoom && room.IsInClientBattleRobert)
+        if(room.IsInClientBattleRobert)
+        {
+            RemoveRoom(room, RoomEndReason.AllPeerLeave);
+        }
+    }
+
+    void SyncRoomInfo(int peer)
+    {
+        if (!_allUserRooms.TryGetValue(peer, out var room))
         {
             _serverSocket.SendMessage(peer, new UpdateRoomMemberList());
-            RemoveRoom(room, RoomEndReason.AllPeerLeave);
             return;
         }
 
@@ -350,6 +354,8 @@ public class NetProcessor
 
     private void JoinRoom(int peer, JoinRoomMsg joinRoomMsg)
     {
+        RemoveRoomIfPossible(peer);
+
         if (_allRooms.TryGetValue(joinRoomMsg.roomId, out var room))
         {
             if (_allUserRooms.TryGetValue(peer, out var room1))  // 已经有房间
@@ -357,13 +363,13 @@ public class NetProcessor
                 if (room1 != room)
                 {
                     room.Error(peer, RoomError.JoinRoomErrorHasRoom);
-                    SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
+                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
                 else
                 {
                     room.Error(peer, RoomError.JoinRoomErrorInsideRoom);
-                    SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
+                    SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
                     return;
                 }
             }
@@ -394,9 +400,16 @@ public class NetProcessor
 
     private void CreateRobertRoom(int peer, CreateAutoCreateRoomRobertMsg createAutoCreateRoomRobertMsg)
     {
+        RemoveRoomIfPossible(peer);
+        
         var robertId = createAutoCreateRoomRobertMsg.idRobert;
         if (_allUserRooms.ContainsKey(robertId))
         {
+            _serverSocket.SendMessage(peer, new RoomErrorCode()
+            {
+                roomError = RoomError.CreateRoomErrorHasRoom
+            });
+            SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
             return;
         }
 
@@ -431,6 +444,8 @@ public class NetProcessor
 
     void CreateRoom(int peer, CreateRoomMsg msg)
     {
+        RemoveRoomIfPossible(peer);
+
         if (_allUserRooms.ContainsKey(peer))
         {
             _serverSocket.SendMessage(peer, new RoomErrorCode()
@@ -438,7 +453,7 @@ public class NetProcessor
                 roomError = RoomError.CreateRoomErrorHasRoom
             });
             
-            SyncRoomInfo(peer, true); // 客户端逻辑错乱，重发房间信息。
+            SyncRoomInfo(peer); // 客户端逻辑错乱，重发房间信息。
             return;
         }
 
